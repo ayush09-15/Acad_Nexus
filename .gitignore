@@ -1,0 +1,30 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Node.js
+node_modules/
+npm-debug.log*
+dist/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Uploaded documents and generated data
+uploads/
+data/
+*.pdf
+
+# Logs and OS files
+logs/
+*.log
+.DS_Store
+
+# Test and coverage outputs
+coverage/
+htmlcov/
