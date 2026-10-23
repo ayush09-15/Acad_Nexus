@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 
 const initialClasses = [
@@ -34,16 +34,44 @@ const initialNotes = [
   },
 ];
 
+function loadFromStorage(key, fallback) {
+  try {
+    const savedValue = localStorage.getItem(key);
+    return savedValue ? JSON.parse(savedValue) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export default function App() {
   const [activePage, setActivePage] = useState("Dashboard");
   const [classKey, setClassKey] = useState("");
-  const [classes, setClasses] = useState(initialClasses);
+  const [classes, setClasses] = useState(() =>
+  loadFromStorage("acad-nexus-classes", initialClasses)
+);
   const [notes] = useState(initialNotes);
   const [searchQuery, setSearchQuery] = useState("");
   const [message, setMessage] = useState("");
-  const [chatMessages, setChatMessages] = useState({});
+  const [chatMessages, setChatMessages] = useState(() =>
+  loadFromStorage("acad-nexus-chat-messages", {})
+);
   const [chatInput, setChatInput] = useState("");
 
+  // Save joined classes whenever the list changes.
+useEffect(() => {
+  localStorage.setItem(
+    "acad-nexus-classes",
+    JSON.stringify(classes)
+  );
+}, [classes]);
+
+// Save chat history whenever messages change.
+useEffect(() => {
+  localStorage.setItem(
+    "acad-nexus-chat-messages",
+    JSON.stringify(chatMessages)
+  );
+}, [chatMessages]);
   const availableClasses = {
   AI2026: {
     id: 4,
