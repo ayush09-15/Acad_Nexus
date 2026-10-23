@@ -149,4 +149,13 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports = { registerStudent, loginUser };
+const getMe = (req, res) => {
+  return res.status(200).json({
+    success: true,
+    data: {
+      user: req.user,
+    },
+  });
+};
+
+module.exports = { registerStudent, loginUser, getMe };
