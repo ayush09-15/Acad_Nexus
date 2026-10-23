@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const mongoose = require("mongoose");
 const Class = require("../models/Class");
 
 const createClass = async (req, res) => {
@@ -70,4 +71,38 @@ const getClasses = async (req, res) => {
   }
 };
 
-module.exports = { createClass, getClasses };
+const getClassById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid class ID",
+      });
+    }
+
+    const classData = await Class.findById(id);
+
+    if (!classData) {
+      return res.status(404).json({
+        success: false,
+        message: "Class not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: classData,
+    });
+  } catch (error) {
+    console.error("Get class by ID error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+module.exports = { createClass, getClasses, getClassById };
