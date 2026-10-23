@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 import "./App.css";
 const initialClasses = [
   {
@@ -44,6 +46,11 @@ function loadFromStorage(key, fallback) {
 }
 
 function Dashboard() {
+  const storedUser = JSON.parse(
+  localStorage.getItem("acadNexusUser") || "null"
+);
+
+const userName = storedUser?.name || "Student";
   const [activePage, setActivePage] = useState("Dashboard");
   const [classKey, setClassKey] = useState("");
   const [classes, setClasses] = useState(() =>
@@ -83,8 +90,15 @@ useEffect(() => {
         setClassesLoading(true);
         setClassesError("");
 
+        const token = localStorage.getItem("acadNexusToken");
+
         const response = await fetch(
-          "http://127.0.0.1:5001/api/classes"
+          "http://127.0.0.1:5001/api/classes",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
         if (!response.ok) {
@@ -167,10 +181,15 @@ useEffect(() => {
     try {
       setClassesError("");
 
+      const token = localStorage.getItem("acadNexusToken");
+
       const response = await fetch(
         `http://127.0.0.1:5001/api/classes/${classId}`,
         {
           method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
@@ -276,7 +295,7 @@ useEffect(() => {
         </nav>
 
         <div className="profile-card">
-          <strong>Ayush Pratap Singh</strong>
+          <strong>{userName}</strong>
           <span className="verified-badge">Verified student</span>
         </div>
       </aside>
@@ -290,7 +309,7 @@ useEffect(() => {
 
             <h1>
               {activePage === "Dashboard"
-                ? "Welcome back, Ayush"
+                ? `Welcome back, ${userName.split(" ")[0]}`
                 : activePage}
             </h1>
           </div>
@@ -741,6 +760,8 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
