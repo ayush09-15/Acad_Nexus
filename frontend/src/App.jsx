@@ -1,7 +1,7 @@
-
 import { useEffect, useState } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import LandingPage from "./pages/LandingPage";
 import "./App.css";
-
 const initialClasses = [
   {
     id: 1,
@@ -43,7 +43,7 @@ function loadFromStorage(key, fallback) {
   }
 }
 
-export default function App() {
+function Dashboard() {
   const [activePage, setActivePage] = useState("Dashboard");
   const [classKey, setClassKey] = useState("");
   const [classes, setClasses] = useState(() =>
@@ -735,5 +735,14 @@ useEffect(() => {
   )}
       </main>
     </div>
+  );
+}
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
