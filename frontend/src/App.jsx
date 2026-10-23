@@ -37,30 +37,95 @@ const initialNotes = [
 export default function App() {
   const [activePage, setActivePage] = useState("Dashboard");
   const [classKey, setClassKey] = useState("");
-  const [classes] = useState(initialClasses);
+  const [classes, setClasses] = useState(initialClasses);
   const [notes] = useState(initialNotes);
   const [searchQuery, setSearchQuery] = useState("");
   const [message, setMessage] = useState("");
+  const [chatMessages, setChatMessages] = useState({});
+  const [chatInput, setChatInput] = useState("");
+
+  const availableClasses = {
+  AI2026: {
+    id: 4,
+    name: "Artificial Intelligence",
+    professor: "Prof. Mehta",
+  },
+  DSA2026: {
+    id: 5,
+    name: "Data Structures and Algorithms",
+    professor: "Prof. Gupta",
+  },
+};
 
   // Handle the demo join-class form.
   function joinClass(event) {
-    event.preventDefault();
+  event.preventDefault();
 
-    if (!classKey.trim()) {
-      setMessage("Please enter a class key.");
-      return;
-    }
+  const enteredKey = classKey.trim().toUpperCase();
 
-    setMessage(
-      "Demo only: class joining will work when the backend is connected."
-    );
+  if (!enteredKey) {
+    setMessage("Please enter a class key.");
+    return;
   }
+
+  const course = availableClasses[enteredKey];
+
+  if (!course) {
+    setMessage("Invalid class key. Please check and try again.");
+    return;
+  }
+
+  const alreadyJoined = classes.some(
+    (existingClass) => existingClass.id === course.id
+  );
+
+  if (alreadyJoined) {
+    setMessage("You have already joined this class.");
+    return;
+  }
+
+  setClasses((previousClasses) => [
+    ...previousClasses,
+    course,
+  ]);
+
+  setClassKey("");
+  setMessage(`Successfully joined ${course.name}!`);
+}
 
   // Navigate to a page and clear any previous message.
   function navigateTo(page) {
     setActivePage(page);
     setMessage("");
   }
+
+  function sendChatMessage(event) {
+  event.preventDefault();
+
+  const question = chatInput.trim();
+
+  if (!question) return;
+
+  setChatMessages((previousMessages) => ({
+    ...previousMessages,
+    [activePage]: [
+      ...(previousMessages[activePage] || []),
+      {
+        id: Date.now(),
+        role: "user",
+        text: question,
+      },
+      {
+        id: Date.now() + 1,
+        role: "assistant",
+        text:
+          "This is a demo response. AI answers based on your professor's PDFs will be available when the backend is connected.",
+      },
+    ],
+  }));
+
+  setChatInput("");
+}
 
   // Search notes by title or subject.
   const filteredNotes = notes.filter((note) =>
@@ -395,28 +460,116 @@ export default function App() {
         )}
 
         {/* Class chat placeholder and other future pages */}
-        {activePage !== "Dashboard" &&
-          activePage !== "My Notes" &&
-          activePage !== "Join a class" && (
-            <section className="panel placeholder-panel">
-              <div className="placeholder-icon">✦</div>
 
-              <p className="eyebrow">ACAD NEXUS</p>
-              <h2>{activePage}</h2>
+{/* Class chat page */}
+{classes.some((course) => course.name === activePage) && (
+  <section className="chat-page">
+    <div className="chat-heading">
+      <div>
+        <p className="eyebrow">YOUR CLASSROOM ASSISTANT</p>
+        <h2>{activePage}</h2>
+        <p>Ask questions about your class study materials.</p>
+      </div>
 
-              <p>
-                This section is ready for the next development step.
-                We'll build its features and connect them to the backend.
-              </p>
+      <button
+        className="text-button"
+        onClick={() => navigateTo("Dashboard")}
+      >
+        ← Dashboard
+      </button>
+    </div>
 
-              <button
-                className="primary-button"
-                onClick={() => navigateTo("Dashboard")}
-              >
-                ← Back to dashboard
-              </button>
-            </section>
-          )}
+    <div className="chat-suggestions">
+      <p>Try asking</p>
+
+      {[
+        "Explain the important concepts",
+        "Summarize my class notes",
+        "Give me exam preparation questions",
+      ].map((question) => (
+        <button
+          key={question}
+          className="suggestion-button"
+          onClick={() => setChatInput(question)}
+        >
+          {question} →
+        </button>
+      ))}
+    </div>
+
+    <div className="chat-conversation" aria-live="polite">
+      {(chatMessages[activePage] || []).length === 0 ? (
+        <div className="chat-empty-state">
+          <div className="placeholder-icon">✦</div>
+          <h3>What would you like to learn?</h3>
+          <p>
+            Ask a question to get started with your class assistant.
+          </p>
+        </div>
+      ) : (
+        (chatMessages[activePage] || []).map((chatMessage) => (
+          <div
+            key={chatMessage.id}
+            className={`chat-message ${
+              chatMessage.role === "user"
+                ? "user-message"
+                : "assistant-message"
+            }`}
+          >
+            <span className="chat-role">
+              {chatMessage.role === "user" ? "You" : "Acad Nexus AI"}
+            </span>
+            <p>{chatMessage.text}</p>
+          </div>
+        ))
+      )}
+    </div>
+
+    <form className="chat-input-form" onSubmit={sendChatMessage}>
+      <input
+        type="text"
+        value={chatInput}
+        onChange={(event) => setChatInput(event.target.value)}
+        placeholder={`Ask a question about ${activePage}...`}
+        aria-label="Ask your class assistant"
+      />
+
+      <button
+        type="submit"
+        className="primary-button"
+        disabled={!chatInput.trim()}
+      >
+        Send →
+      </button>
+    </form>
+
+    <p className="chat-disclaimer">
+      Demo mode: responses are placeholders and are not based on uploaded PDFs.
+    </p>
+  </section>
+)}
+
+{/* Other future pages */}
+{activePage !== "Dashboard" &&
+  activePage !== "My Notes" &&
+  activePage !== "Join a class" &&
+  !classes.some((course) => course.name === activePage) && (
+    <section className="panel placeholder-panel">
+      <div className="placeholder-icon">✦</div>
+      <p className="eyebrow">ACAD NEXUS</p>
+      <h2>{activePage}</h2>
+      <p>
+        This section is ready for the next development step.
+        We'll build its features and connect them to the backend.
+      </p>
+      <button
+        className="primary-button"
+        onClick={() => navigateTo("Dashboard")}
+      >
+        ← Back to dashboard
+      </button>
+    </section>
+  )}
       </main>
     </div>
   );

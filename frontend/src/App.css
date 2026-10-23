@@ -657,3 +657,196 @@ h2 {
     margin-left: 62px;
   }
 }
+
+/* CLASS CHAT PAGE */
+
+.chat-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-height: 600px;
+  padding: 30px 34px;
+}
+
+.chat-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.chat-heading h2 {
+  margin: 8px 0;
+  font-size: 25px;
+}
+
+.chat-heading p:not(.eyebrow) {
+  color: #7b879a;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.chat-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.chat-suggestions > p {
+  width: 100%;
+  margin: 0;
+  color: #7b879a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.suggestion-button {
+  padding: 10px 13px;
+  border: 1px solid #dce2eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #334155;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.suggestion-button:hover {
+  border-color: #117e83;
+  color: #117e83;
+}
+
+.chat-conversation {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 240px;
+  padding: 22px;
+  border: 1px solid #e7ebf2;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.chat-empty-state {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 12px;
+  text-align: center;
+}
+
+.chat-empty-state .placeholder-icon {
+  margin-bottom: 12px;
+}
+
+.chat-empty-state h3 {
+  margin: 8px 0;
+  font-size: 17px;
+}
+
+.chat-empty-state p {
+  max-width: 350px;
+  color: #7b879a;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.chat-message {
+  max-width: 78%;
+  padding: 14px 16px;
+  border-radius: 12px;
+}
+
+.chat-message p {
+  margin: 7px 0 0;
+  font-size: 14px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.chat-role {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.user-message {
+  align-self: flex-end;
+  background: #e2f4f2;
+  color: #183b3c;
+}
+
+.assistant-message {
+  align-self: flex-start;
+  border: 1px solid #e7ebf2;
+  background: #f8fafc;
+  color: #243247;
+}
+
+.chat-input-form {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid #dce2eb;
+  border-radius: 13px;
+  background: #fff;
+}
+
+.chat-input-form:focus-within {
+  border-color: #117e83;
+  box-shadow: 0 0 0 3px #117e831a;
+}
+
+.chat-input-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #182438;
+}
+
+.chat-input-form input:focus {
+  box-shadow: none;
+}
+
+.chat-input-form button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.chat-disclaimer {
+  margin: -10px 0 0;
+  color: #7b879a;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+@media (max-width: 760px) {
+  .chat-page {
+    min-height: 500px;
+    padding: 24px 16px;
+  }
+
+  .chat-heading {
+    flex-direction: column;
+  }
+
+  .chat-message {
+    max-width: 95%;
+  }
+
+  .chat-input-form {
+    gap: 6px;
+  }
+
+  .chat-input-form button {
+    padding: 11px;
+  }
+}
