@@ -45,6 +45,16 @@ function loadFromStorage(key, fallback) {
   }
 }
 
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem("acadNexusToken");
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
+
 function Dashboard() {
   const storedUser = JSON.parse(
   localStorage.getItem("acadNexusUser") || "null"
@@ -773,7 +783,14 @@ export default function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/dashboard" element={<Dashboard />} />
+      <Route
+      path="/dashboard"
+      element={
+      <ProtectedRoute>
+      <Dashboard />
+      </ProtectedRoute>
+    }
+    />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
