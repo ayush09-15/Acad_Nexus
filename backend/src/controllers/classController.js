@@ -51,4 +51,23 @@ const createClass = async (req, res) => {
   }
 };
 
-module.exports = { createClass };
+const getClasses = async (req, res) => {
+  try {
+    const classes = await Class.find().sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: classes.length,
+      data: classes,
+    });
+  } catch (error) {
+    console.error("Get classes error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+module.exports = { createClass, getClasses };
