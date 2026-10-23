@@ -105,4 +105,43 @@ const getClassById = async (req, res) => {
   }
 };
 
-module.exports = { createClass, getClasses, getClassById };
+
+const joinClass = async (req, res) => {
+  try {
+    const { joinCode } = req.body;
+
+    if (!joinCode?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Join code is required",
+      });
+    }
+
+    const classData = await Class.findOne({
+      joinCode: joinCode.trim().toUpperCase(),
+    });
+
+    if (!classData) {
+      return res.status(404).json({
+        success: false,
+        message: "Invalid join code or class not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Class found successfully",
+      data: classData,
+    });
+  } catch (error) {
+    console.error("Join class error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
+module.exports = { createClass, getClasses, getClassById, joinClass };
