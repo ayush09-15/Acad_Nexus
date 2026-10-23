@@ -144,4 +144,48 @@ const joinClass = async (req, res) => {
 };
 
 
-module.exports = { createClass, getClasses, getClassById, joinClass };
+const deleteClass = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid class ID",
+      });
+    }
+
+    const deletedClass = await Class.findByIdAndDelete(id);
+
+    if (!deletedClass) {
+      return res.status(404).json({
+        success: false,
+        message: "Class not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Class deleted successfully",
+      data: deletedClass,
+    });
+  } catch (error) {
+    console.error("Delete class error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
+
+
+module.exports = {
+  createClass,
+  getClasses,
+  getClassById,
+  joinClass,
+  deleteClass,
+};
