@@ -51,6 +51,11 @@ function Dashboard() {
 );
 
 const userName = storedUser?.name || "Student";
+const handleLogout = () => {
+  localStorage.removeItem("acadNexusToken");
+  localStorage.removeItem("acadNexusUser");
+  window.location.href = "/login";
+};
   const [activePage, setActivePage] = useState("Dashboard");
   const [classKey, setClassKey] = useState("");
   const [classes, setClasses] = useState(() =>
@@ -295,7 +300,13 @@ useEffect(() => {
         </nav>
 
         <div className="profile-card">
-          <strong>{userName}</strong>
+          <div className="user-actions">
+  <strong>{userName}</strong>
+
+  <button className="logout-btn" onClick={handleLogout}>
+    Logout
+  </button>
+</div>
           <span className="verified-badge">Verified student</span>
         </div>
       </aside>
