@@ -49,6 +49,9 @@ export default function App() {
   const [classes, setClasses] = useState(() =>
   loadFromStorage("acad-nexus-classes", initialClasses)
 );
+  const [backendClasses, setBackendClasses] = useState([]);
+  const [classesLoading, setClassesLoading] = useState(true);
+  const [classesError, setClassesError] = useState("");
   const [notes] = useState(initialNotes);
   const [searchQuery, setSearchQuery] = useState("");
   const [message, setMessage] = useState("");
@@ -72,6 +75,37 @@ useEffect(() => {
     JSON.stringify(chatMessages)
   );
 }, [chatMessages]);
+
+  // Fetch classes from the backend when the app loads.
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        setClassesLoading(true);
+        setClassesError("");
+
+        const response = await fetch(
+          "http://127.0.0.1:5001/api/classes"
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch classes from the server.");
+        }
+
+        const result = await response.json();
+
+        setBackendClasses(result.data || []);
+      } catch (error) {
+        setClassesError(
+          error.message || "Unable to load backend classes."
+        );
+      } finally {
+        setClassesLoading(false);
+      }
+    };
+
+    fetchClasses();
+  }, []);
+
   const availableClasses = {
   AI2026: {
     id: 4,
@@ -120,6 +154,44 @@ useEffect(() => {
   setClassKey("");
   setMessage(`Successfully joined ${course.name}!`);
 }
+
+
+  // Delete a class stored in MongoDB.
+  async function deleteBackendClass(classId) {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this class? This action cannot be undone."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setClassesError("");
+
+      const response = await fetch(
+        `http://127.0.0.1:5001/api/classes/${classId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.message || "Failed to delete the class."
+        );
+      }
+
+      setBackendClasses((previousClasses) =>
+        previousClasses.filter((course) => course._id !== classId)
+      );
+
+      setMessage("Class deleted successfully.");
+    } catch (error) {
+      setClassesError(error.message || "Unable to delete the class.");
+    }
+  }
+
 
   // Navigate to a page and clear any previous message.
   function navigateTo(page) {
@@ -269,6 +341,69 @@ useEffect(() => {
                       onClick={() => navigateTo(course.name)}
                     >
                       Open class chat <span>→</span>
+                    </button>
+                  </article>
+                ))}
+              </div>
+
+              {/* Classes loaded from MongoDB */}
+              <div className="section-heading" style={{ marginTop: "36px" }}>
+                <div>
+                  <p className="eyebrow">DATABASE CONNECTED</p>
+                  <h2>Classes from backend</h2>
+                </div>
+
+                <span className="count-badge">
+                  {backendClasses.length} classes
+                </span>
+              </div>
+
+              {classesLoading && <p>Loading classes from MongoDB...</p>}
+
+              {classesError && (
+                <p className="form-message">{classesError}</p>
+              )}
+
+              {!classesLoading &&
+                !classesError &&
+                backendClasses.length === 0 && (
+                  <p>No classes found in the database.</p>
+                )}
+
+              <div className="class-grid">
+                {backendClasses.map((course) => (
+                  <article className="class-card" key={course._id}>
+                    <div className="course-icon">
+                      {course.name
+                        .split(" ")
+                        .map((word) => word[0])
+                        .join("")
+                        .slice(0, 2)
+                        .toUpperCase()}
+                    </div>
+
+                    <h3>{course.name}</h3>
+
+                    <p className="professor">
+                      Professor: {course.professor}
+                    </p>
+
+                    <p className="professor">
+                      Join code: {course.joinCode}
+                    </p>
+
+                    <button
+                      className="primary-button"
+                      onClick={() => navigateTo(course.name)}
+                    >
+                      Open class chat <span>→</span>
+                    </button>
+
+                    <button
+                      className="delete-button"
+                      onClick={() => deleteBackendClass(course._id)}
+                    >
+                      Delete class
                     </button>
                   </article>
                 ))}

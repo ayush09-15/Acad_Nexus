@@ -850,3 +850,22 @@ h2 {
     padding: 11px;
   }
 }
+
+
+.delete-button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 11px 15px;
+  border: 1px solid #e5b8b8;
+  border-radius: 9px;
+  background: #fff;
+  color: #b42318;
+  font-size: 12px;
+  font-weight: 650;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.delete-button:hover {
+  background: #fff1f0;
+  border-color: #d92d20;
+}
