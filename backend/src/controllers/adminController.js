@@ -118,7 +118,41 @@ const approveProfessor = async (req, res) => {
   }
 };
 
+
+ // Admin-only: fetch all professor accounts.
+    const getProfessors = async (req, res) => {
+        try {
+            const professors = await User.find({ role: "professor" })
+            .select("_id name email role professorApproved createdAt")
+            .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: professors.length,
+      data: {
+        professors: professors.map((professor) => ({
+          id: professor._id.toString(),
+          name: professor.name,
+          email: professor.email,
+          role: professor.role,
+          professorApproved: professor.professorApproved,
+          createdAt: professor.createdAt,
+        })),
+      },
+    });
+  } catch (error) {
+    console.error("Fetch professors failed:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch professor accounts.",
+    });
+  }
+};
+
+
 module.exports = {
   createProfessor,
   approveProfessor,
+  getProfessors,
 };

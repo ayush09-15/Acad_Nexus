@@ -4,6 +4,7 @@ const router = express.Router();
 const {
   createProfessor,
   approveProfessor,
+  getProfessors,
 } = require("../controllers/adminController");
 
 const {
@@ -16,7 +17,7 @@ router.post(
   "/professors",
   authenticateUser,
   authorizeRoles("admin"),
-  createProfessor
+  createProfessor,
 );
 
 // Only admins can approve professor accounts.
@@ -25,6 +26,14 @@ router.patch(
   authenticateUser,
   authorizeRoles("admin"),
   approveProfessor
+);
+
+
+router.get(
+  "/professors",
+  authenticateUser,
+  authorizeRoles("admin"),
+  getProfessors,
 );
 
 module.exports = router;

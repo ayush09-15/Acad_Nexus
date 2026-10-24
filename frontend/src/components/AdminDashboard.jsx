@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./AdminDashboard.css";
+import ProfessorManagement from "./ProfessorManagement";
 
 export default function AdminDashboard() {
   const user = JSON.parse(
     localStorage.getItem("acadNexusUser") || "null"
   );
+  const [showProfessorManagement, setShowProfessorManagement] = useState(false);
 
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
@@ -16,6 +18,13 @@ export default function AdminDashboard() {
     window.dispatchEvent(new Event("acadNexusAuthChanged"));
     navigate("/login", { replace: true });
   }
+  if (showProfessorManagement) {
+  return (
+    <ProfessorManagement
+      onBack={() => setShowProfessorManagement(false)}
+    />
+  );
+}
 
   return (
     <div className="admin-page">
@@ -138,15 +147,11 @@ export default function AdminDashboard() {
             </div>
 
             <button
-              className="admin-primary-button"
-              onClick={() =>
-                setMessage(
-                  "Professor management will be connected to the backend next."
-                )
-              }
-            >
-              Manage Professors →
-            </button>
+  className="admin-primary-button"
+  onClick={() => setShowProfessorManagement(true)}
+>
+  Manage Professors →
+</button>
           </div>
 
           {message && (
