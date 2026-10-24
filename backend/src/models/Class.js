@@ -1,3 +1,4 @@
+
 const mongoose = require("mongoose");
 
 const classSchema = new mongoose.Schema(
@@ -20,10 +21,19 @@ const classSchema = new mongoose.Schema(
       default: "",
     },
 
+    // Display name retained for frontend compatibility.
     professor: {
       type: String,
       required: [true, "Professor name is required"],
       trim: true,
+    },
+
+    // Actual owner of the class.
+    professorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "Professor ID is required"],
+      index: true,
     },
 
     joinCode: {

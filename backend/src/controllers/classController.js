@@ -2,14 +2,25 @@ const crypto = require("crypto");
 const mongoose = require("mongoose");
 const Class = require("../models/Class");
 
+
+
 const createClass = async (req, res) => {
   try {
-    const { name, subject, description, professor } = req.body;
+    const { name, subject, description } = req.body;
 
-    if (!name?.trim() || !professor?.trim()) {
+    if (!name?.trim()) {
       return res.status(400).json({
         success: false,
-        message: "Class name and professor name are required",
+        message: "Class name is required",
+      });
+    }
+
+    // The authenticated professor's identity comes from the JWT.
+    // Never trust a professor name or ID sent by the client.
+    if (req.user.role !== "professor") {
+      return res.status(403).json({
+        success: false,
+        message: "Only professors can create classes.",
       });
     }
 
@@ -17,9 +28,10 @@ const createClass = async (req, res) => {
 
     const newClass = await Class.create({
       name: name.trim(),
-      subject: subject || "",
-      description: description || "",
-      professor: professor.trim(),
+      subject: subject?.trim() || "",
+      description: description?.trim() || "",
+      professor: req.user.name,
+      professorId: req.user.id,
       joinCode,
     });
 
@@ -51,6 +63,7 @@ const createClass = async (req, res) => {
     });
   }
 };
+
 
 const getClasses = async (req, res) => {
   try {
@@ -144,6 +157,7 @@ const joinClass = async (req, res) => {
 };
 
 
+
 const deleteClass = async (req, res) => {
   try {
     const { id } = req.params;
@@ -155,19 +169,25 @@ const deleteClass = async (req, res) => {
       });
     }
 
-    const deletedClass = await Class.findByIdAndDelete(id);
+    // Find a class owned by the currently authenticated professor.
+    const classData = await Class.findOne({
+      _id: id,
+      professorId: req.user.id,
+    });
 
-    if (!deletedClass) {
+    if (!classData) {
       return res.status(404).json({
         success: false,
-        message: "Class not found",
+        message: "Class not found or you do not own this class.",
       });
     }
+
+    await Class.deleteOne({ _id: classData._id });
 
     return res.status(200).json({
       success: true,
       message: "Class deleted successfully",
-      data: deletedClass,
+      data: classData,
     });
   } catch (error) {
     console.error("Delete class error:", error.message);
