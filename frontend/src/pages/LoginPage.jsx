@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { loginUser } from "../services/auth.api";
@@ -27,6 +26,7 @@ export default function LoginPage() {
       // Store the JWT and user information for authenticated requests.
       localStorage.setItem("acadNexusToken", token);
       localStorage.setItem("acadNexusUser", JSON.stringify(user));
+      window.dispatchEvent(new Event("acadNexusAuthChanged"));
 
       navigate("/dashboard");
     } catch (err) {
