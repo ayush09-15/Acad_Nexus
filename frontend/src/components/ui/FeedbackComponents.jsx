@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 /**
  * Reusable UI feedback components for Acad Nexus.
  *
@@ -81,6 +83,20 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }) {
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === "Escape") {
+        onCancel();
+      }
+    }
+    if (open) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open, onCancel]);
+
   if (!open) return null;
 
   return (
@@ -90,7 +106,6 @@ export function ConfirmDialog({
       aria-modal="true"
       aria-label={title}
       onClick={onCancel}
-      onKeyDown={(e) => e.key === "Escape" && onCancel()}
     >
       <div
         className="ui-dialog"

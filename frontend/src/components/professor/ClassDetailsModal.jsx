@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 /**
  * ClassDetailsModal displays complete course details and provides
@@ -12,6 +12,20 @@ import { useState } from "react";
  */
 export default function ClassDetailsModal({ classItem, isOpen, onClose }) {
   const [copiedSnippet, setCopiedSnippet] = useState(false);
+
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    }
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen || !classItem) return null;
 

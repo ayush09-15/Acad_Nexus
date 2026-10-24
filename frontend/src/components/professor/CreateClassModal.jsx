@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClass } from "../../services/api";
 import { ErrorMessage } from "../ui/FeedbackComponents";
 
@@ -19,6 +19,20 @@ export default function CreateClassModal({ isOpen, onClose, onClassCreated }) {
   const [validationError, setValidationError] = useState("");
   const [apiError, setApiError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === "Escape" && !submitting) {
+        onClose();
+      }
+    }
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, submitting, onClose]);
 
   if (!isOpen) return null;
 
