@@ -55,6 +55,7 @@ export default function StudentDashboard() {
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("info"); // "info" | "success" | "error"
   const [joinLoading, setJoinLoading] = useState(false);
+  const [classSearch, setClassSearch] = useState("");
   const [chatMessages, setChatMessages] = useState(() =>
     loadFromStorage("acad-nexus-chat-messages", {})
   );
@@ -210,6 +211,13 @@ export default function StudentDashboard() {
     `${note.title} ${note.subject}`
       .toLowerCase()
       .includes(searchQuery.trim().toLowerCase())
+  );
+
+  // Filter enrolled classes by title, subject, or professor.
+  const filteredClasses = classes.filter((course) =>
+    `${course.name} ${course.subject || ""} ${course.professor || ""}`
+      .toLowerCase()
+      .includes(classSearch.trim().toLowerCase())
   );
 
   // Build sidebar navigation from the current class list.
@@ -376,40 +384,76 @@ export default function StudentDashboard() {
               )}
 
               {!classesLoading && !classesError && classes.length > 0 && (
-                <div className="class-grid">
-                  {classes.map((course) => (
-                    <article
-                      className="class-card"
-                      key={course._id || course.id}
-                    >
-                      <div className="course-icon">
-                        {course.name
-                          .split(" ")
-                          .map((word) => word[0])
-                          .join("")
-                          .slice(0, 2)
-                          .toUpperCase()}
-                      </div>
+                <>
+                  <div className="class-search-bar">
+                    <input
+                      type="search"
+                      className="class-search-input"
+                      placeholder="Search your classes by name, subject, or professor…"
+                      value={classSearch}
+                      onChange={(e) => setClassSearch(e.target.value)}
+                      aria-label="Search enrolled classes"
+                    />
+                  </div>
 
-                      <h3>{course.name}</h3>
+                  {filteredClasses.length === 0 ? (
+                    <EmptyState
+                      icon="⌕"
+                      heading="No matching classes"
+                      description={`No classes match "${classSearch}". Check your spelling or clear the search.`}
+                    />
+                  ) : (
+                    <div className="class-grid">
+                      {filteredClasses.map((course) => (
+                        <article
+                          className="class-card"
+                          key={course._id || course.id}
+                        >
+                          <div className="class-card-header">
+                            <div className="course-icon">
+                              {course.name
+                                .split(" ")
+                                .map((word) => word[0])
+                                .join("")
+                                .slice(0, 2)
+                                .toUpperCase()}
+                            </div>
+                            {course.subject && (
+                              <span className="class-subject-badge">
+                                {course.subject}
+                              </span>
+                            )}
+                          </div>
 
-                      <p className="professor">
-                        {course.professor}
-                      </p>
+                          <h3>{course.name}</h3>
 
-                      {course.subject && (
-                        <p className="class-subject">{course.subject}</p>
-                      )}
+                          <p className="professor">
+                            Prof. {course.professor?.replace(/^Prof\.\s*/i, "")}
+                          </p>
 
-                      <button
-                        className="primary-button"
-                        onClick={() => navigateTo(course.name)}
-                      >
-                        Open class chat <span>→</span>
-                      </button>
-                    </article>
-                  ))}
-                </div>
+                          {course.description && (
+                            <p className="class-description">
+                              {course.description}
+                            </p>
+                          )}
+
+                          <div className="class-meta">
+                            <span className="class-meta-item">
+                              👥 {course.students?.length || 0} students
+                            </span>
+                          </div>
+
+                          <button
+                            className="primary-button"
+                            onClick={() => navigateTo(course.name)}
+                          >
+                            Open class chat <span>→</span>
+                          </button>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </section>
 
