@@ -5,6 +5,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import AdminDashboard from "./components/AdminDashboard";
 import StudentDashboard from "./components/StudentDashboard";
+import ProfessorWorkspace from "./components/professor/ProfessorWorkspace";
 import "./App.css";
 
 function ProtectedRoute({ children }) {
@@ -49,11 +50,7 @@ function ProtectedRoute({ children }) {
             {user?.role === "admin" ? (
               <AdminDashboard />
             ) : user?.role === "professor" ? (
-              <div style={{ padding: "32px" }}>
-                <h1>Professor Dashboard</h1>
-                <p>Welcome, {user.name}.</p>
-                <p>Professor features will be added next.</p>
-              </div>
+              <ProfessorWorkspace />
             ) : (
               <StudentDashboard />
             )}
