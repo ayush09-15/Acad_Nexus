@@ -49,12 +49,14 @@ export function EmptyState({
   icon = "✦",
   heading,
   description,
+  action,
 }) {
   return (
     <div className="ui-empty" role="status">
       <div className="placeholder-icon" aria-hidden="true">{icon}</div>
       <h3>{heading}</h3>
       {description && <p>{description}</p>}
+      {action && <div style={{ marginTop: "16px" }}>{action}</div>}
     </div>
   );
 }

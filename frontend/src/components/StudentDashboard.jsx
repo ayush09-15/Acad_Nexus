@@ -280,7 +280,24 @@ export default function StudentDashboard() {
                 <EmptyState
                   icon="＋"
                   heading="No classes yet"
-                  description="Join a class using a class key from your professor, or ask your professor to create a class."
+                  description="Join a class using a class key from your professor to begin accessing lecture notes and study assistance."
+                  action={
+                    <button
+                      type="button"
+                      className="primary-button"
+                      onClick={() => {
+                        const inputEl = document.getElementById("join-class-input");
+                        if (inputEl) {
+                          inputEl.focus();
+                          inputEl.scrollIntoView({ behavior: "smooth" });
+                        } else {
+                          navigateTo("Join a class");
+                        }
+                      }}
+                    >
+                      Join a class with key <span>→</span>
+                    </button>
+                  }
                 />
               )}
 
