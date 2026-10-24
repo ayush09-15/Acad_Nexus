@@ -68,9 +68,7 @@ const handleLogout = () => {
 };
   const [activePage, setActivePage] = useState("Dashboard");
   const [classKey, setClassKey] = useState("");
-  const [classes, setClasses] = useState(() =>
-  loadFromStorage("acad-nexus-classes", initialClasses)
-);
+  const [classes, setClasses] = useState([]);
   const [backendClasses, setBackendClasses] = useState([]);
   const [classesLoading, setClassesLoading] = useState(true);
   const [classesError, setClassesError] = useState("");
@@ -81,14 +79,6 @@ const handleLogout = () => {
   loadFromStorage("acad-nexus-chat-messages", {})
 );
   const [chatInput, setChatInput] = useState("");
-
-  // Save joined classes whenever the list changes.
-useEffect(() => {
-  localStorage.setItem(
-    "acad-nexus-classes",
-    JSON.stringify(classes)
-  );
-}, [classes]);
 
 // Save chat history whenever messages change.
 useEffect(() => {
@@ -122,7 +112,9 @@ useEffect(() => {
 
         const result = await response.json();
 
-        setBackendClasses(result.data || []);
+        const fetchedClasses = result.data || [];
+        setBackendClasses(fetchedClasses);
+        setClasses(fetchedClasses);
       } catch (error) {
         setClassesError(
           error.message || "Unable to load backend classes."
@@ -135,21 +127,10 @@ useEffect(() => {
     fetchClasses();
   }, []);
 
-  const availableClasses = {
-  AI2026: {
-    id: 4,
-    name: "Artificial Intelligence",
-    professor: "Prof. Mehta",
-  },
-  DSA2026: {
-    id: 5,
-    name: "Data Structures and Algorithms",
-    professor: "Prof. Gupta",
-  },
-};
-
+  
   // Handle the demo join-class form.
-  function joinClass(event) {
+  
+async function joinClass(event) {
   event.preventDefault();
 
   const enteredKey = classKey.trim().toUpperCase();
@@ -159,30 +140,57 @@ useEffect(() => {
     return;
   }
 
-  const course = availableClasses[enteredKey];
+  try {
+    setMessage("");
 
-  if (!course) {
-    setMessage("Invalid class key. Please check and try again.");
-    return;
+    const token = localStorage.getItem("acadNexusToken");
+
+    const response = await fetch(
+      "http://127.0.0.1:5001/api/classes/join",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          joinCode: enteredKey,
+        }),
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        result.message || "Unable to join this class."
+      );
+    }
+
+    const course = result.data;
+
+    const alreadyJoined = classes.some(
+      (existingClass) =>
+        existingClass._id === course._id
+    );
+
+    if (alreadyJoined) {
+      setMessage("This class is already in your list.");
+      return;
+    }
+
+    setClasses((previousClasses) => [
+      ...previousClasses,
+      course,
+    ]);
+
+    setClassKey("");
+    setMessage(`Class found: ${course.name}`);
+  } catch (error) {
+    setMessage(error.message || "Unable to join the class.");
   }
-
-  const alreadyJoined = classes.some(
-    (existingClass) => existingClass.id === course.id
-  );
-
-  if (alreadyJoined) {
-    setMessage("You have already joined this class.");
-    return;
-  }
-
-  setClasses((previousClasses) => [
-    ...previousClasses,
-    course,
-  ]);
-
-  setClassKey("");
-  setMessage(`Successfully joined ${course.name}!`);
 }
+
 
 
   // Delete a class stored in MongoDB.
@@ -217,8 +225,12 @@ useEffect(() => {
       }
 
       setBackendClasses((previousClasses) =>
-        previousClasses.filter((course) => course._id !== classId)
-      );
+  previousClasses.filter((course) => course._id !== classId)
+);
+
+setClasses((previousClasses) =>
+  previousClasses.filter((course) => course._id !== classId)
+);
 
       setMessage("Class deleted successfully.");
     } catch (error) {
@@ -354,12 +366,18 @@ useEffect(() => {
                   {classes.length} classes
                 </span>
               </div>
-
+              {classesLoading && <p>Loading classes...</p>}
+              {classesError && (
+                <p className="form-message">{classesError}</p>
+                )}
+                {!classesLoading && !classesError && classes.length === 0 && (
+                <p>No classes found. Ask your professor to create a class.</p>
+                )}
               <div className="class-grid">
                 {classes.map((course) => (
                   <article
                     className="class-card"
-                    key={course.id}
+                    key={course._id || course.id}
                   >
                     <div className="course-icon">
                       {course.name
@@ -381,69 +399,6 @@ useEffect(() => {
                       onClick={() => navigateTo(course.name)}
                     >
                       Open class chat <span>→</span>
-                    </button>
-                  </article>
-                ))}
-              </div>
-
-              {/* Classes loaded from MongoDB */}
-              <div className="section-heading" style={{ marginTop: "36px" }}>
-                <div>
-                  <p className="eyebrow">DATABASE CONNECTED</p>
-                  <h2>Classes from backend</h2>
-                </div>
-
-                <span className="count-badge">
-                  {backendClasses.length} classes
-                </span>
-              </div>
-
-              {classesLoading && <p>Loading classes from MongoDB...</p>}
-
-              {classesError && (
-                <p className="form-message">{classesError}</p>
-              )}
-
-              {!classesLoading &&
-                !classesError &&
-                backendClasses.length === 0 && (
-                  <p>No classes found in the database.</p>
-                )}
-
-              <div className="class-grid">
-                {backendClasses.map((course) => (
-                  <article className="class-card" key={course._id}>
-                    <div className="course-icon">
-                      {course.name
-                        .split(" ")
-                        .map((word) => word[0])
-                        .join("")
-                        .slice(0, 2)
-                        .toUpperCase()}
-                    </div>
-
-                    <h3>{course.name}</h3>
-
-                    <p className="professor">
-                      Professor: {course.professor}
-                    </p>
-
-                    <p className="professor">
-                      Join code: {course.joinCode}
-                    </p>
-
-                    <button
-                      className="primary-button"
-                      onClick={() => navigateTo(course.name)}
-                    >
-                      Open class chat <span>→</span>
-                    </button>
-
-                    <button
-                      className="delete-button"
-                      onClick={() => deleteBackendClass(course._id)}
-                    >
-                      Delete class
                     </button>
                   </article>
                 ))}
