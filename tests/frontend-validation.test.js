@@ -1,0 +1,208 @@
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+
+/**
+ * Validation logic matching JoinClassSection.jsx
+ */
+function validateJoinKey(key) {
+  const trimmed = (key || "").trim();
+  if (!trimmed) {
+    return "Class key cannot be empty.";
+  }
+  if (trimmed.length < 4) {
+    return "Class key must be at least 4 characters.";
+  }
+  if (!/^[A-Za-z0-9]+$/.test(trimmed)) {
+    return "Class key can only contain letters and numbers.";
+  }
+  return "";
+}
+
+/**
+ * Validation logic matching CreateClassModal.jsx
+ */
+function validateClassName(name) {
+  const trimmed = (name || "").trim();
+  if (!trimmed) {
+    return "Class name is required.";
+  }
+  if (trimmed.length < 3) {
+    return "Class name must be at least 3 characters long.";
+  }
+  return "";
+}
+
+/**
+ * Duplicate check matching JoinClassSection.jsx
+ */
+function isDuplicateEnrollment(enrolledClasses, targetKeyOrId) {
+  const normalized = (targetKeyOrId || "").trim();
+  const upper = normalized.toUpperCase();
+  const lower = normalized.toLowerCase();
+  return enrolledClasses.some(
+    (c) =>
+      (c.joinCode && c.joinCode.toUpperCase() === upper) ||
+      (c._id && c._id.toLowerCase() === lower)
+  );
+}
+
+/**
+ * Authorization filtering matching ProfessorWorkspace.jsx
+ */
+function filterProfessorClasses(allClasses, user) {
+  if (!user) return [];
+  return allClasses.filter(
+    (c) =>
+      (user.id && c.professorId === user.id) ||
+      c.professor === user.name
+  );
+}
+
+describe("Frontend Join Class Validation", () => {
+  it("rejects empty or whitespace-only join keys", () => {
+    assert.strictEqual(validateJoinKey(""), "Class key cannot be empty.");
+    assert.strictEqual(validateJoinKey("   "), "Class key cannot be empty.");
+    assert.strictEqual(validateJoinKey(null), "Class key cannot be empty.");
+  });
+
+  it("rejects join keys with fewer than 4 characters", () => {
+    assert.strictEqual(
+      validateJoinKey("AB"),
+      "Class key must be at least 4 characters."
+    );
+    assert.strictEqual(
+      validateJoinKey(" 123 "),
+      "Class key must be at least 4 characters."
+    );
+  });
+
+  it("rejects join keys with special characters", () => {
+    assert.strictEqual(
+      validateJoinKey("KEY-1234"),
+      "Class key can only contain letters and numbers."
+    );
+    assert.strictEqual(
+      validateJoinKey("KEY_1234"),
+      "Class key can only contain letters and numbers."
+    );
+    assert.strictEqual(
+      validateJoinKey("KEY@123"),
+      "Class key can only contain letters and numbers."
+    );
+  });
+
+  it("accepts valid alphanumeric join keys", () => {
+    assert.strictEqual(validateJoinKey("A3F9B2C1"), "");
+    assert.strictEqual(validateJoinKey("CS101"), "");
+    assert.strictEqual(validateJoinKey("MATH2020"), "");
+  });
+});
+
+describe("Frontend Class Creation Validation", () => {
+  it("rejects empty or blank class names", () => {
+    assert.strictEqual(validateClassName(""), "Class name is required.");
+    assert.strictEqual(validateClassName("   "), "Class name is required.");
+    assert.strictEqual(validateClassName(null), "Class name is required.");
+  });
+
+  it("rejects class names shorter than 3 characters", () => {
+    assert.strictEqual(
+      validateClassName("CS"),
+      "Class name must be at least 3 characters long."
+    );
+  });
+
+  it("accepts valid class names", () => {
+    assert.strictEqual(validateClassName("Operating Systems"), "");
+    assert.strictEqual(validateClassName("Database Management"), "");
+    assert.strictEqual(validateClassName("CS 101 Introduction"), "");
+  });
+});
+
+describe("Duplicate Enrollment Protection", () => {
+  const existingClasses = [
+    { _id: "class_1", name: "Networks", joinCode: "NET101" },
+    { _id: "class_2", name: "Algorithms", joinCode: "ALGO202" },
+  ];
+
+  it("detects duplicates by uppercase join code", () => {
+    assert.strictEqual(
+      isDuplicateEnrollment(existingClasses, "NET101"),
+      true
+    );
+  });
+
+  it("detects duplicates case-insensitively", () => {
+    assert.strictEqual(
+      isDuplicateEnrollment(existingClasses, "net101"),
+      true
+    );
+    assert.strictEqual(
+      isDuplicateEnrollment(existingClasses, "algo202"),
+      true
+    );
+  });
+
+  it("detects duplicates by class ID", () => {
+    assert.strictEqual(
+      isDuplicateEnrollment(existingClasses, "class_1"),
+      true
+    );
+  });
+
+  it("allows non-enrolled new class keys", () => {
+    assert.strictEqual(
+      isDuplicateEnrollment(existingClasses, "NEWCOURSE1"),
+      false
+    );
+  });
+});
+
+describe("Professor Workspace Class Authorization Filtering", () => {
+  const mockClasses = [
+    {
+      _id: "c1",
+      name: "Operating Systems",
+      professor: "Prof. Alan Turing",
+      professorId: "prof_1",
+    },
+    {
+      _id: "c2",
+      name: "Quantum Computing",
+      professor: "Prof. Richard Feynman",
+      professorId: "prof_2",
+    },
+    {
+      _id: "c3",
+      name: "Theory of Computation",
+      professor: "Prof. Alan Turing",
+      professorId: "prof_1",
+    },
+  ];
+
+  it("returns only classes owned by professor ID", () => {
+    const user = { id: "prof_1", name: "Prof. Alan Turing", role: "professor" };
+    const filtered = filterProfessorClasses(mockClasses, user);
+
+    assert.strictEqual(filtered.length, 2);
+    assert.deepStrictEqual(
+      filtered.map((c) => c._id),
+      ["c1", "c3"]
+    );
+  });
+
+  it("returns empty array when professor has no classes", () => {
+    const user = { id: "prof_99", name: "Prof. New", role: "professor" };
+    const filtered = filterProfessorClasses(mockClasses, user);
+
+    assert.strictEqual(filtered.length, 0);
+  });
+
+  it("falls back to matching professor display name if ID is missing", () => {
+    const user = { id: null, name: "Prof. Richard Feynman", role: "professor" };
+    const filtered = filterProfessorClasses(mockClasses, user);
+
+    assert.strictEqual(filtered.length, 1);
+    assert.strictEqual(filtered[0]._id, "c2");
+  });
+});

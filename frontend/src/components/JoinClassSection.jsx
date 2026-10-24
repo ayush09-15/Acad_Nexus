@@ -71,7 +71,7 @@ export default function JoinClassSection({
     const alreadyJoined = enrolledClasses.some(
       (c) =>
         (c.joinCode && c.joinCode.toUpperCase() === trimmedKey) ||
-        c._id === trimmedKey
+        (c._id && c._id.toLowerCase() === trimmedKey.toLowerCase())
     );
 
     if (alreadyJoined) {
