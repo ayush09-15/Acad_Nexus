@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import {
   fetchClasses,
-  joinClassByCode,
   getStoredUser,
   clearAuth,
 } from "../services/api";
@@ -9,8 +8,8 @@ import {
   LoadingSpinner,
   ErrorMessage,
   EmptyState,
-  SuccessMessage,
 } from "./ui/FeedbackComponents";
+import JoinClassSection from "./JoinClassSection";
 import "../components/ui/FeedbackComponents.css";
 
 // Temporary demo notes (unchanged from original).
@@ -46,15 +45,12 @@ export default function StudentDashboard() {
   };
 
   const [activePage, setActivePage] = useState("Dashboard");
-  const [classKey, setClassKey] = useState("");
   const [classes, setClasses] = useState([]);
   const [classesLoading, setClassesLoading] = useState(true);
   const [classesError, setClassesError] = useState("");
   const [notes] = useState(initialNotes);
   const [searchQuery, setSearchQuery] = useState("");
   const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState("info"); // "info" | "success" | "error"
-  const [joinLoading, setJoinLoading] = useState(false);
   const [classSearch, setClassSearch] = useState("");
   const [chatMessages, setChatMessages] = useState(() =>
     loadFromStorage("acad-nexus-chat-messages", {})
@@ -116,60 +112,14 @@ export default function StudentDashboard() {
     };
   }, []);
 
-  // Handle join-class form submission.
-  async function handleJoinClass(event) {
-    event.preventDefault();
-
-    const enteredKey = classKey.trim().toUpperCase();
-
-    if (!enteredKey) {
-      setMessage("Please enter a class key.");
-      setMessageType("error");
-      return;
-    }
-
-    if (enteredKey.length < 4) {
-      setMessage("Class keys are at least 4 characters long.");
-      setMessageType("error");
-      return;
-    }
-
-    try {
-      setMessage("");
-      setJoinLoading(true);
-
-      const result = await joinClassByCode(enteredKey);
-      const course = result.data;
-
-      const alreadyJoined = classes.some(
-        (existingClass) => existingClass._id === course._id
-      );
-
-      if (alreadyJoined) {
-        setMessage("This class is already in your list.");
-        setMessageType("info");
-        setJoinLoading(false);
-        return;
-      }
-
-      // Add the class to the local list and refresh from backend.
-      setClasses((previousClasses) => [...previousClasses, course]);
-      setClassKey("");
-      setMessage(`Successfully joined: ${course.name}`);
-      setMessageType("success");
-
-      // Refresh the class list from the backend to get the latest state.
-      loadClasses();
-    } catch (error) {
-      if (error.message?.includes("not found") || error.message?.includes("Invalid")) {
-        setMessage("Invalid class key. Please check and try again.");
-      } else {
-        setMessage(error.message || "Unable to join the class.");
-      }
-      setMessageType("error");
-    } finally {
-      setJoinLoading(false);
-    }
+  // Callback when a student successfully enrolls in a class.
+  function handleClassJoined(newClass) {
+    setClasses((previousClasses) => {
+      const exists = previousClasses.some((c) => c._id === newClass._id);
+      if (exists) return previousClasses;
+      return [newClass, ...previousClasses];
+    });
+    loadClasses();
   }
 
   // Navigate to a page and clear any previous message.
@@ -232,55 +182,6 @@ export default function StudentDashboard() {
     },
   ];
 
-  // Render the join-class form (shared between dashboard and join page).
-  function renderJoinForm(inputId) {
-    return (
-      <form onSubmit={handleJoinClass}>
-        <label htmlFor={inputId}>Class key</label>
-
-        <input
-          id={inputId}
-          type="text"
-          value={classKey}
-          onChange={(event) => setClassKey(event.target.value)}
-          placeholder="Enter class key"
-          disabled={joinLoading}
-          aria-describedby={message ? `${inputId}-message` : undefined}
-        />
-
-        <button
-          className="primary-button full-width"
-          type="submit"
-          disabled={joinLoading || !classKey.trim()}
-        >
-          {joinLoading ? "Joining…" : "Join class"} <span>→</span>
-        </button>
-      </form>
-    );
-  }
-
-  // Render the message feedback below forms.
-  function renderMessage(idPrefix) {
-    if (!message) return null;
-
-    if (messageType === "success") {
-      return <SuccessMessage message={message} />;
-    }
-
-    const className = messageType === "error"
-      ? "form-message form-message--error"
-      : "form-message";
-
-    return (
-      <p
-        className={className}
-        role="status"
-        id={idPrefix ? `${idPrefix}-message` : undefined}
-      >
-        {message}
-      </p>
-    );
-  }
 
   return (
     <div className="app-shell">
@@ -458,19 +359,11 @@ export default function StudentDashboard() {
             </section>
 
             <aside className="right-column">
-              {/* Join class */}
-              <section className="panel join-panel">
-                <div className="panel-icon">＋</div>
-
-                <h2>Join a class</h2>
-
-                <p>
-                  Ask your professor for the class key to join a class.
-                </p>
-
-                {renderJoinForm("class-key")}
-                {renderMessage("class-key")}
-              </section>
+              <JoinClassSection
+                onClassJoined={handleClassJoined}
+                enrolledClasses={classes}
+                variant="panel"
+              />
 
               {/* Recent notes */}
               <section className="panel notes-panel">
@@ -506,26 +399,21 @@ export default function StudentDashboard() {
 
         {/* Join class page */}
         {activePage === "Join a class" && (
-          <section className="panel placeholder-panel">
-            <div className="placeholder-icon">＋</div>
-
-            <p className="eyebrow">JOIN YOUR CLASS</p>
-            <h2>Join a class</h2>
-
-            <p>
-              Enter the class key provided by your professor.
-            </p>
-
-            {renderJoinForm("sidebar-class-key")}
-            {renderMessage("sidebar-class-key")}
+          <div className="join-page-wrapper">
+            <JoinClassSection
+              onClassJoined={handleClassJoined}
+              enrolledClasses={classes}
+              variant="page"
+            />
 
             <button
               className="text-button"
+              style={{ margin: "20px 40px" }}
               onClick={() => navigateTo("Dashboard")}
             >
               ← Back to dashboard
             </button>
-          </section>
+          </div>
         )}
 
         {/* My Notes page */}
