@@ -333,6 +333,17 @@ h2 {
   overflow-wrap: anywhere;
 }
 
+.form-message--error {
+  background: #fef2f2;
+  color: #991b1b !important;
+}
+
+.class-subject {
+  color: #68768a;
+  font-size: 12px;
+  margin: 0 0 12px;
+}
+
 .notes-panel h2 {
   margin-bottom: 18px;
 }
