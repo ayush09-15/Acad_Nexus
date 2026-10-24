@@ -10,7 +10,12 @@ import { useState } from "react";
  *   onEdit: (classItem: object) => void,
  * }} props
  */
-export default function ProfessorClassCard({ classItem, onDelete, onEdit }) {
+export default function ProfessorClassCard({
+  classItem,
+  onDelete,
+  onEdit,
+  onViewDetails,
+}) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopyCode() {
@@ -87,6 +92,18 @@ export default function ProfessorClassCard({ classItem, onDelete, onEdit }) {
         <span>👥 {studentCount} {studentCount === 1 ? "student" : "students"}</span>
 
         <div className="prof-card-actions">
+          {onViewDetails && (
+            <button
+              type="button"
+              className="prof-secondary-btn"
+              style={{ padding: "5px 10px", fontSize: "12px" }}
+              onClick={() => onViewDetails(classItem)}
+              title="View class details and shareable invitation"
+            >
+              Details
+            </button>
+          )}
+
           {onEdit && (
             <button
               type="button"

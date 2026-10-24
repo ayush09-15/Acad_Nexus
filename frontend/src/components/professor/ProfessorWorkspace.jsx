@@ -14,6 +14,7 @@ import {
 } from "../ui/FeedbackComponents";
 import ProfessorClassCard from "./ProfessorClassCard";
 import CreateClassModal from "./CreateClassModal";
+import ClassDetailsModal from "./ClassDetailsModal";
 import "./ProfessorWorkspace.css";
 import "../ui/FeedbackComponents.css";
 
@@ -32,6 +33,7 @@ export default function ProfessorWorkspace() {
 
   // Modal and dialog states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [detailedClass, setDetailedClass] = useState(null);
   const [classToDelete, setClassToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -352,6 +354,7 @@ export default function ProfessorWorkspace() {
                   classItem={item}
                   onDelete={promptDeleteClass}
                   onEdit={handleEditClass}
+                  onViewDetails={(item) => setDetailedClass(item)}
                 />
               ))}
             </section>
@@ -364,6 +367,13 @@ export default function ProfessorWorkspace() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onClassCreated={handleClassCreated}
+      />
+
+      {/* Class Details & Invitation Modal */}
+      <ClassDetailsModal
+        isOpen={Boolean(detailedClass)}
+        classItem={detailedClass}
+        onClose={() => setDetailedClass(null)}
       />
 
       {/* Confirmation Dialog for Destructive Actions */}
