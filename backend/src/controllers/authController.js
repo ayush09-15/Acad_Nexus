@@ -1,10 +1,16 @@
-
 const User = require("../models/User");
+const Professor = require("../models/Professor");
+const jwt = require("jsonwebtoken");
 
-// Register a new student.
-const registerStudent = async (req, res) => {
+/**
+ * Register a new user (Student or Professor).
+ * Students are active immediately.
+ * Professors are created with professorApproved: false (pending admin approval)
+ * and have a linked record created in the Professor collection.
+ */
+const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role, department, designation, qualification, institution } = req.body;
 
     // Validate required fields.
     if (!name?.trim() || !email?.trim() || !password) {
@@ -36,28 +42,49 @@ const registerStudent = async (req, res) => {
       });
     }
 
-    // Public registration ALWAYS creates a student.
-    // Never accept role or professorApproved from the client.
+    // Role can be student or professor (admin is created via internal script only)
+    const targetRole = role === "professor" ? "professor" : "student";
+    const isProfessor = targetRole === "professor";
+
+    // Create the base User authentication account
     const user = await User.create({
       name: name.trim(),
       email: normalizedEmail,
       password,
-      role: "student",
-      professorApproved: false,
+      role: targetRole,
+      professorApproved: false, // Pending admin approval
     });
+
+    // Approach 2: If professor, create linked record in Professor collection
+    let professorProfile = null;
+    if (isProfessor) {
+      professorProfile = await Professor.create({
+        userId: user._id,
+        name: user.name,
+        email: user.email,
+        department: department?.trim() || "General Academics",
+        designation: designation?.trim() || "Faculty Instructor",
+        qualification: qualification?.trim() || "",
+        institution: institution?.trim() || "Acad Nexus University",
+        approvalStatus: "pending",
+      });
+    }
 
     return res.status(201).json({
       success: true,
-      message: "Student registered successfully.",
+      message: isProfessor
+        ? "Professor account registered successfully. Your account is pending administrative approval before you can log in."
+        : "Student registered successfully.",
       data: {
         id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
+        professorApproved: user.professorApproved,
+        professorProfile: professorProfile || undefined,
       },
     });
   } catch (error) {
-    // Handle duplicate email if simultaneous requests race.
     if (error.code === 11000) {
       return res.status(409).json({
         success: false,
@@ -65,17 +92,14 @@ const registerStudent = async (req, res) => {
       });
     }
 
-    console.error("Student registration failed:", error.message);
+    console.error("User registration failed:", error.message);
 
     return res.status(500).json({
       success: false,
-      message: "Unable to register student.",
+      message: "Unable to register account.",
     });
   }
 };
-
-
-const jwt = require("jsonwebtoken");
 
 // Log in an existing user.
 const loginUser = async (req, res) => {
@@ -110,11 +134,19 @@ const loginUser = async (req, res) => {
       });
     }
 
+    // Guard: Professor account must be approved by an administrator
     if (user.role === "professor" && !user.professorApproved) {
       return res.status(403).json({
         success: false,
-        message: "Your professor account has not been approved.",
+        message:
+          "Your professor account has not been approved yet. An administrator must approve your account before you can log in.",
       });
+    }
+
+    // If professor, retrieve their linked academic profile
+    let professorProfile = null;
+    if (user.role === "professor") {
+      professorProfile = await Professor.findOne({ userId: user._id });
     }
 
     const token = jwt.sign(
@@ -136,6 +168,11 @@ const loginUser = async (req, res) => {
           name: user.name,
           email: user.email,
           role: user.role,
+          professorApproved: user.professorApproved,
+          department: professorProfile?.department || "General Academics",
+          designation: professorProfile?.designation || "Faculty Instructor",
+          qualification: professorProfile?.qualification || "",
+          institution: professorProfile?.institution || "",
         },
       },
     });
@@ -158,4 +195,9 @@ const getMe = (req, res) => {
   });
 };
 
-module.exports = { registerStudent, loginUser, getMe };
+module.exports = {
+  registerUser,
+  registerStudent: registerUser, // Backward compatibility alias
+  loginUser,
+  getMe,
+};

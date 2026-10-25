@@ -1,4 +1,3 @@
-
 const API_BASE_URL = "http://localhost:5001/api/auth";
 
 async function authRequest(endpoint, payload) {
@@ -19,8 +18,30 @@ async function authRequest(endpoint, payload) {
   return result;
 }
 
+export function registerUser({
+  name,
+  email,
+  password,
+  role = "student",
+  department,
+  designation,
+  qualification,
+  institution,
+}) {
+  return authRequest("/register", {
+    name,
+    email,
+    password,
+    role,
+    department,
+    designation,
+    qualification,
+    institution,
+  });
+}
+
 export function registerStudent({ name, email, password }) {
-  return authRequest("/register", { name, email, password });
+  return registerUser({ name, email, password, role: "student" });
 }
 
 export function loginUser({ email, password }) {

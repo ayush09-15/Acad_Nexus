@@ -4,6 +4,8 @@ const router = express.Router();
 const {
   createProfessor,
   approveProfessor,
+  revokeProfessor,
+  deleteProfessor,
   getProfessors,
   getStudents,
 } = require("../controllers/adminController");
@@ -21,12 +23,40 @@ router.post(
   createProfessor,
 );
 
-// Only admins can approve professor accounts.
+// Approve a professor account (support PATCH and PUT)
 router.patch(
   "/professors/:id/approve",
   authenticateUser,
   authorizeRoles("admin"),
   approveProfessor
+);
+router.put(
+  "/professors/:id/approve",
+  authenticateUser,
+  authorizeRoles("admin"),
+  approveProfessor
+);
+
+// Revoke a professor's approval
+router.patch(
+  "/professors/:id/revoke",
+  authenticateUser,
+  authorizeRoles("admin"),
+  revokeProfessor
+);
+router.put(
+  "/professors/:id/revoke",
+  authenticateUser,
+  authorizeRoles("admin"),
+  revokeProfessor
+);
+
+// Remove a professor account
+router.delete(
+  "/professors/:id",
+  authenticateUser,
+  authorizeRoles("admin"),
+  deleteProfessor
 );
 
 router.get(

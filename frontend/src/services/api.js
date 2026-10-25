@@ -2,7 +2,7 @@
  * Centralized API configuration for Acad Nexus.
  *
  * Every authenticated request reads the JWT stored in localStorage and
- * attaches it as a Bearer token.  The helpers below standardize error
+ * attaches it as a Bearer token. The helpers below standardize error
  * handling so individual components don't have to repeat try/catch
  * boilerplate around fetch().
  */
@@ -91,8 +91,6 @@ export function fetchClassById(classId) {
 
 /**
  * Ask the backend to look up a class by its join code.
- * The backend's current implementation finds the class but does not
- * persist enrollment — that is a known backend dependency.
  */
 export function joinClassByCode(joinCode) {
   return apiRequest("/classes/join", {
@@ -190,6 +188,25 @@ export function askClassAssistant(classId, question) {
   });
 }
 
+// ── Professor Profile API ─────────────────────────────────────────────
+
+/**
+ * Fetch authenticated professor's academic profile.
+ */
+export function fetchProfessorProfile() {
+  return apiRequest("/professors/profile");
+}
+
+/**
+ * Update authenticated professor's profile details.
+ */
+export function updateProfessorProfile(profileData) {
+  return apiRequest("/professors/profile", {
+    method: "PUT",
+    body: JSON.stringify(profileData),
+  });
+}
+
 // ── Admin API ─────────────────────────────────────────────────────────
 
 /**
@@ -197,6 +214,59 @@ export function askClassAssistant(classId, question) {
  */
 export function fetchAdminProfessors() {
   return apiRequest("/admin/professors");
+}
+
+/**
+ * Approve a professor account (admin-only).
+ */
+export function approveAdminProfessor(professorId) {
+  return apiRequest(`/admin/professors/${professorId}/approve`, {
+    method: "PATCH",
+  });
+}
+
+/**
+ * Revoke approval for a professor account (admin-only).
+ */
+export function revokeAdminProfessor(professorId) {
+  return apiRequest(`/admin/professors/${professorId}/revoke`, {
+    method: "PATCH",
+  });
+}
+
+/**
+ * Delete a professor account (admin-only).
+ */
+export function deleteAdminProfessor(professorId) {
+  return apiRequest(`/admin/professors/${professorId}`, {
+    method: "DELETE",
+  });
+}
+
+/**
+ * Create an instructor account directly (admin-only).
+ */
+export function createAdminProfessor({
+  name,
+  email,
+  password,
+  department,
+  designation,
+  qualification,
+  institution,
+}) {
+  return apiRequest("/admin/professors", {
+    method: "POST",
+    body: JSON.stringify({
+      name,
+      email,
+      password,
+      department,
+      designation,
+      qualification,
+      institution,
+    }),
+  });
 }
 
 /**

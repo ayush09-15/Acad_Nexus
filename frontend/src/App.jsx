@@ -18,16 +18,14 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
- export default function App() {
+export default function App() {
   const [user, setUser] = useState(() =>
     JSON.parse(localStorage.getItem("acadNexusUser") || "null")
   );
 
   useEffect(() => {
     const syncUser = () => {
-      setUser(
-        JSON.parse(localStorage.getItem("acadNexusUser") || "null")
-      );
+      setUser(JSON.parse(localStorage.getItem("acadNexusUser") || "null"));
     };
 
     window.addEventListener("acadNexusAuthChanged", syncUser);
@@ -43,6 +41,7 @@ function ProtectedRoute({ children }) {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
 
+      {/* Main role-based dashboard router */}
       <Route
         path="/dashboard"
         element={
@@ -54,6 +53,24 @@ function ProtectedRoute({ children }) {
             ) : (
               <StudentDashboard />
             )}
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Explicit Professor Workspace route */}
+      <Route
+        path="/professor"
+        element={
+          <ProtectedRoute>
+            <ProfessorWorkspace />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/professor/*"
+        element={
+          <ProtectedRoute>
+            <ProfessorWorkspace />
           </ProtectedRoute>
         }
       />

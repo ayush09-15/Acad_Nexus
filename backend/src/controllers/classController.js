@@ -79,7 +79,9 @@ const getClasses = async (req, res) => {
       });
     }
 
-    const classes = await Class.find(filter).sort({ createdAt: -1 });
+    const classes = await Class.find(filter)
+      .populate("students", "name email createdAt")
+      .sort({ createdAt: -1 });
 
     return res.status(200).json({
       success: true,
@@ -122,7 +124,10 @@ const getClassById = async (req, res) => {
       });
     }
 
-    const classData = await Class.findOne(filter);
+    const classData = await Class.findOne(filter).populate(
+      "students",
+      "name email createdAt"
+    );
 
     if (!classData) {
       return res.status(404).json({
@@ -446,7 +451,10 @@ const chatWithClassAssistant = async (req, res) => {
       });
     }
 
-    const classData = await Class.findOne(filter);
+    const classData = await Class.findOne(filter).populate(
+      "students",
+      "name email createdAt"
+    );
     if (!classData) {
       return res.status(404).json({
         success: false,

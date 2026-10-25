@@ -8,6 +8,9 @@ import { useState } from "react";
  *   classItem: object,
  *   onDelete: (classItem: object) => void,
  *   onEdit: (classItem: object) => void,
+ *   onViewDetails: (classItem: object) => void,
+ *   onOpenMaterials: (classItem: object) => void,
+ *   onViewRoster?: (classItem: object) => void,
  * }} props
  */
 export default function ProfessorClassCard({
@@ -16,6 +19,7 @@ export default function ProfessorClassCard({
   onEdit,
   onViewDetails,
   onOpenMaterials,
+  onViewRoster,
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -109,6 +113,25 @@ export default function ProfessorClassCard({
               title="Upload and manage study materials for RAG"
             >
               📄 Materials
+            </button>
+          )}
+
+          {onViewRoster && (
+            <button
+              type="button"
+              className="prof-secondary-btn"
+              style={{
+                padding: "5px 10px",
+                fontSize: "12px",
+                borderColor: "#e2e8f0",
+                color: "#475569",
+                background: "#f8fafc",
+                fontWeight: 650,
+              }}
+              onClick={() => onViewRoster(classItem)}
+              title="View enrolled students roster"
+            >
+              👥 Roster
             </button>
           )}
 

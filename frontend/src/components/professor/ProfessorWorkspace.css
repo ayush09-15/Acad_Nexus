@@ -582,3 +582,124 @@
   background: #fee2e2;
   color: #b91c1c;
 }
+
+
+/* ── Faculty Profile Styles ─────────────────────────────────────────── */
+
+.prof-profile-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+  padding: 32px;
+}
+
+.prof-profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #f1f5f9;
+  flex-wrap: wrap;
+}
+
+.prof-profile-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.prof-profile-big-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #0284c7, #2563eb);
+  color: #fff;
+  font-size: 28px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 8px 16px rgba(2, 132, 199, 0.2);
+}
+
+.prof-profile-identity h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.prof-profile-identity p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.prof-profile-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.prof-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  margin-top: 28px;
+}
+
+.prof-profile-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.prof-profile-field-group label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+}
+
+.prof-profile-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+  background: #f8fafc;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.prof-profile-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  color: #0f172a;
+  background: #fff;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.prof-profile-input:focus {
+  outline: none;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+.prof-profile-textarea {
+  min-height: 90px;
+  resize: vertical;
+  font-family: inherit;
+}
