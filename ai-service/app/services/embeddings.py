@@ -37,11 +37,19 @@ class EmbeddingService:
             return generate_fallback_embedding(text)
 
         try:
-            result = genai.embed_content(
-                model=settings.EMBEDDING_MODEL,
-                content=text,
-                task_type="retrieval_document",
-            )
+            try:
+                result = genai.embed_content(
+                    model=settings.EMBEDDING_MODEL,
+                    content=text,
+                    task_type="retrieval_document",
+                    output_dimensionality=768,
+                )
+            except Exception:
+                result = genai.embed_content(
+                    model=settings.EMBEDDING_MODEL,
+                    content=text,
+                    task_type="retrieval_document",
+                )
             return result["embedding"]
         except Exception as e:
             print(f"Warning: Gemini embedding failed ({e}), using fallback embedding.")
@@ -57,17 +65,56 @@ class EmbeddingService:
             return generate_fallback_embedding(query)
 
         try:
-            result = genai.embed_content(
-                model=settings.EMBEDDING_MODEL,
-                content=query,
-                task_type="retrieval_query",
-            )
+            try:
+                result = genai.embed_content(
+                    model=settings.EMBEDDING_MODEL,
+                    content=query,
+                    task_type="retrieval_query",
+                    output_dimensionality=768,
+                )
+            except Exception:
+                result = genai.embed_content(
+                    model=settings.EMBEDDING_MODEL,
+                    content=query,
+                    task_type="retrieval_query",
+                )
             return result["embedding"]
         except Exception as e:
             print(f"Warning: Gemini query embedding failed ({e}), using fallback embedding.")
             return generate_fallback_embedding(query)
 
     @classmethod
-    def get_batch_embeddings(cls, texts: List[str]) -> List[List[float]]:
-        """Generate embeddings for multiple texts."""
-        return [cls.get_embedding(t) for t in texts]
+    def get_batch_embeddings(cls, texts: List[str], batch_size: int = 50) -> List[List[float]]:
+        """Generate embeddings for multiple texts using batched API requests."""
+        if not texts:
+            return []
+
+        if not settings.GEMINI_API_KEY:
+            return [generate_fallback_embedding(t) for t in texts]
+
+        all_embeddings: List[List[float]] = []
+
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i : i + batch_size]
+            try:
+                try:
+                    result = genai.embed_content(
+                        model=settings.EMBEDDING_MODEL,
+                        content=batch,
+                        task_type="retrieval_document",
+                        output_dimensionality=768,
+                    )
+                except Exception:
+                    result = genai.embed_content(
+                        model=settings.EMBEDDING_MODEL,
+                        content=batch,
+                        task_type="retrieval_document",
+                    )
+                embs = result.get("embedding", [])
+                all_embeddings.extend(embs)
+            except Exception as e:
+                print(f"Warning: Batch embedding failed for batch {i}-{i+len(batch)} ({e}), falling back to single.")
+                for t in batch:
+                    all_embeddings.append(cls.get_embedding(t))
+
+        return all_embeddings
