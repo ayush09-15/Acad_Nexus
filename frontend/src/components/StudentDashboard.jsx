@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import {
   fetchClasses,
+  leaveClass as apiLeaveClass,
   getStoredUser,
   clearAuth,
 } from "../services/api";
@@ -8,6 +9,8 @@ import {
   LoadingSpinner,
   ErrorMessage,
   EmptyState,
+  ConfirmDialog,
+  SuccessMessage,
 } from "./ui/FeedbackComponents";
 import JoinClassSection from "./JoinClassSection";
 import "../components/ui/FeedbackComponents.css";
@@ -48,6 +51,9 @@ export default function StudentDashboard() {
   const [classes, setClasses] = useState([]);
   const [classesLoading, setClassesLoading] = useState(true);
   const [classesError, setClassesError] = useState("");
+  const [dashboardNotice, setDashboardNotice] = useState("");
+  const [classToLeave, setClassToLeave] = useState(null);
+  const [leavingClass, setLeavingClass] = useState(false);
   const [notes] = useState(initialNotes);
   const [searchQuery, setSearchQuery] = useState("");
   const [message, setMessage] = useState("");
@@ -126,6 +132,27 @@ export default function StudentDashboard() {
   function navigateTo(page) {
     setActivePage(page);
     setMessage("");
+  }
+
+  async function handleConfirmLeaveClass() {
+    if (!classToLeave) return;
+
+    try {
+      setLeavingClass(true);
+      await apiLeaveClass(classToLeave._id || classToLeave.id);
+      setClasses((prev) =>
+        prev.filter(
+          (c) => (c._id || c.id) !== (classToLeave._id || classToLeave.id)
+        )
+      );
+      setDashboardNotice(`You have left "${classToLeave.name}".`);
+      setTimeout(() => setDashboardNotice(""), 4000);
+      setClassToLeave(null);
+    } catch (err) {
+      setClassesError(err.message || "Failed to leave class. Please try again.");
+    } finally {
+      setLeavingClass(false);
+    }
   }
 
   function sendChatMessage(event) {
@@ -265,6 +292,12 @@ export default function StudentDashboard() {
                 </span>
               </div>
 
+              {dashboardNotice && (
+                <div style={{ marginBottom: "16px" }}>
+                  <SuccessMessage message={dashboardNotice} />
+                </div>
+              )}
+
               {classesLoading && (
                 <LoadingSpinner message="Loading your classes…" />
               )}
@@ -361,12 +394,24 @@ export default function StudentDashboard() {
                             </span>
                           </div>
 
-                          <button
-                            className="primary-button"
-                            onClick={() => navigateTo(course.name)}
-                          >
-                            Open class chat <span>→</span>
-                          </button>
+                          <div className="class-card-actions">
+                            <button
+                              type="button"
+                              className="primary-button"
+                              onClick={() => navigateTo(course.name)}
+                            >
+                              Open class chat <span>→</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="leave-class-button"
+                              onClick={() => setClassToLeave(course)}
+                              aria-label={`Leave class ${course.name}`}
+                              title="Leave this class"
+                            >
+                              Leave
+                            </button>
+                          </div>
                         </article>
                       ))}
                     </div>
@@ -632,6 +677,15 @@ export default function StudentDashboard() {
             </section>
           )}
       </main>
+
+      <ConfirmDialog
+        open={Boolean(classToLeave)}
+        title="Leave Class"
+        message={`Are you sure you want to leave "${classToLeave?.name}"? You will lose access to class materials and conversations until you rejoin with the class key.`}
+        confirmLabel={leavingClass ? "Leaving…" : "Leave class"}
+        onConfirm={handleConfirmLeaveClass}
+        onCancel={() => setClassToLeave(null)}
+      />
     </div>
   );
 }

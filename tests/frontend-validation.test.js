@@ -154,6 +154,32 @@ describe("Frontend Class Edit Validation and State Update", () => {
   });
 });
 
+describe("Student Class Unenrollment", () => {
+  it("filters out left class from student classes list", () => {
+    const enrolled = [
+      { _id: "c1", name: "Operating Systems" },
+      { _id: "c2", name: "Data Structures" },
+    ];
+    const leaveId = "c1";
+    const remaining = enrolled.filter((c) => (c._id || c.id) !== leaveId);
+
+    assert.strictEqual(remaining.length, 1);
+    assert.strictEqual(remaining[0]._id, "c2");
+  });
+
+  it("handles unenrollment using fallback id property", () => {
+    const enrolled = [
+      { id: "c1", name: "Operating Systems" },
+      { id: "c2", name: "Data Structures" },
+    ];
+    const leaveId = "c2";
+    const remaining = enrolled.filter((c) => (c._id || c.id) !== leaveId);
+
+    assert.strictEqual(remaining.length, 1);
+    assert.strictEqual(remaining[0].id, "c1");
+  });
+});
+
 describe("Duplicate Enrollment Protection", () => {
   const existingClasses = [
     { _id: "class_1", name: "Networks", joinCode: "NET101" },

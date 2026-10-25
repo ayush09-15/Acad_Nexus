@@ -328,6 +328,38 @@ h2 {
   margin-top: auto;
 }
 
+.class-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: auto;
+}
+
+.class-card-actions .primary-button {
+  flex: 1;
+  margin-top: 0;
+}
+
+.leave-class-button {
+  background: transparent;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 9px;
+  padding: 10px 14px;
+  font-weight: 650;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.leave-class-button:hover {
+  background: #fef2f2;
+  border-color: #f87171;
+  color: #b91c1c;
+}
+
 .right-column {
   display: flex;
   flex-direction: column;
