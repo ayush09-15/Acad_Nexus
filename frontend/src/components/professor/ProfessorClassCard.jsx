@@ -94,21 +94,17 @@ export default function ProfessorClassCard({
       </div>
 
       <div className="prof-card-meta">
-        <span>👥 {studentCount} {studentCount === 1 ? "student" : "students"}</span>
+        <div className="prof-card-meta-top">
+          <span className="prof-student-count">
+            👥 {studentCount} {studentCount === 1 ? "student" : "students"}
+          </span>
+        </div>
 
         <div className="prof-card-actions">
           {onOpenMaterials && (
             <button
               type="button"
-              className="prof-secondary-btn"
-              style={{
-                padding: "5px 10px",
-                fontSize: "12px",
-                borderColor: "#bae6fd",
-                color: "#0369a1",
-                background: "#f0f9ff",
-                fontWeight: 650,
-              }}
+              className="prof-materials-btn"
               onClick={() => onOpenMaterials(classItem)}
               title="Upload and manage study materials for RAG"
             >
@@ -119,15 +115,7 @@ export default function ProfessorClassCard({
           {onViewRoster && (
             <button
               type="button"
-              className="prof-secondary-btn"
-              style={{
-                padding: "5px 10px",
-                fontSize: "12px",
-                borderColor: "#e2e8f0",
-                color: "#475569",
-                background: "#f8fafc",
-                fontWeight: 650,
-              }}
+              className="prof-roster-btn"
               onClick={() => onViewRoster(classItem)}
               title="View enrolled students roster"
             >
@@ -139,7 +127,6 @@ export default function ProfessorClassCard({
             <button
               type="button"
               className="prof-secondary-btn"
-              style={{ padding: "5px 10px", fontSize: "12px" }}
               onClick={() => onViewDetails(classItem)}
               title="View class details and shareable invitation"
             >
@@ -151,7 +138,6 @@ export default function ProfessorClassCard({
             <button
               type="button"
               className="prof-secondary-btn"
-              style={{ padding: "5px 10px", fontSize: "12px" }}
               onClick={() => onEdit(classItem)}
               title="Edit class information"
             >
