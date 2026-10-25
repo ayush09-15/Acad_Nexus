@@ -101,61 +101,65 @@ export default function ProfessorClassCard({
         </div>
 
         <div className="prof-card-actions">
-          {onOpenMaterials && (
-            <button
-              type="button"
-              className="prof-materials-btn"
-              onClick={() => onOpenMaterials(classItem)}
-              title="Upload and manage study materials for RAG"
-            >
-              📄 Materials
-            </button>
-          )}
+          <div className="prof-actions-row prof-primary-actions">
+            {onOpenMaterials && (
+              <button
+                type="button"
+                className="prof-materials-btn"
+                onClick={() => onOpenMaterials(classItem)}
+                title="Upload and manage study materials for RAG"
+              >
+                📄 Materials
+              </button>
+            )}
 
-          {onViewRoster && (
-            <button
-              type="button"
-              className="prof-roster-btn"
-              onClick={() => onViewRoster(classItem)}
-              title="View enrolled students roster"
-            >
-              👥 Roster
-            </button>
-          )}
+            {onViewRoster && (
+              <button
+                type="button"
+                className="prof-roster-btn"
+                onClick={() => onViewRoster(classItem)}
+                title="View enrolled students roster"
+              >
+                👥 Roster
+              </button>
+            )}
+          </div>
 
-          {onViewDetails && (
-            <button
-              type="button"
-              className="prof-secondary-btn"
-              onClick={() => onViewDetails(classItem)}
-              title="View class details and shareable invitation"
-            >
-              Details
-            </button>
-          )}
+          <div className="prof-actions-row prof-secondary-actions">
+            {onViewDetails && (
+              <button
+                type="button"
+                className="prof-secondary-btn"
+                onClick={() => onViewDetails(classItem)}
+                title="View class details and shareable invitation"
+              >
+                Details
+              </button>
+            )}
 
-          {onEdit && (
-            <button
-              type="button"
-              className="prof-secondary-btn"
-              onClick={() => onEdit(classItem)}
-              title="Edit class information"
-            >
-              Edit
-            </button>
-          )}
+            {onEdit && (
+              <button
+                type="button"
+                className="prof-secondary-btn"
+                onClick={() => onEdit(classItem)}
+                title="Edit class information"
+              >
+                Edit
+              </button>
+            )}
 
-          {onDelete && (
-            <button
-              type="button"
-              className="prof-danger-action"
-              onClick={() => onDelete(classItem)}
-              title="Delete this class"
-              aria-label={`Delete class ${classItem.name}`}
-            >
-              Delete
-            </button>
-          )}
+            {onDelete && (
+              <button
+                type="button"
+                className="prof-danger-action"
+                onClick={() => onDelete(classItem)}
+                title="Delete this class"
+                aria-label={`Delete class ${classItem.name}`}
+              >
+                Delete
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </article>

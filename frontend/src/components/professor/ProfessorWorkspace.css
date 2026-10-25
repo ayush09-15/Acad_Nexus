@@ -434,8 +434,14 @@
 
 .prof-card-actions {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.prof-actions-row {
+  display: flex;
   align-items: center;
-  flex-wrap: wrap;
   gap: 7px;
   width: 100%;
 }
@@ -495,10 +501,6 @@
   background: #fef2f2;
   border-color: #f87171;
   color: #b91c1c;
-}
-
-.prof-card-actions .prof-danger-action {
-  margin-left: auto;
 }
 
 /* Modal for Class Creation */
