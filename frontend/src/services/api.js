@@ -104,6 +104,16 @@ export function createClass({ name, subject, description }) {
 }
 
 /**
+ * Update an existing class by its _id (professor-only, ownership-checked).
+ */
+export function updateClass(classId, { name, subject, description }) {
+  return apiRequest(`/classes/${classId}`, {
+    method: "PUT",
+    body: JSON.stringify({ name, subject, description }),
+  });
+}
+
+/**
  * Delete a class by its _id (professor-only, ownership-checked).
  */
 export function deleteClass(classId) {

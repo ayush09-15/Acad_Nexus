@@ -79,6 +79,25 @@ describe("API Request Header Formation", () => {
     );
   });
 
+  it("properly formats updateClass payload and method", () => {
+    const payload = {
+      name: "Operating Systems Advanced",
+      subject: "CSED",
+      description: "Updated syllabus and course outline",
+    };
+    const config = buildRequestConfig("prof_token", {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+
+    assert.strictEqual(config.method, "PUT");
+    assert.strictEqual(config.headers.Authorization, "Bearer prof_token");
+    const parsed = JSON.parse(config.body);
+    assert.strictEqual(parsed.name, "Operating Systems Advanced");
+    assert.strictEqual(parsed.subject, "CSED");
+    assert.strictEqual(parsed.description, "Updated syllabus and course outline");
+  });
+
   it("properly formats joinClass payload with uppercase code", () => {
     const payload = { joinCode: "CS101NET" };
     const config = buildRequestConfig("student_token", {
