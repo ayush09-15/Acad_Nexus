@@ -62,15 +62,24 @@ const createClass = async (req, res) => {
   }
 };
 
+
+
 const getClasses = async (req, res) => {
   try {
-    // If the authenticated user is a student, only return classes they have enrolled in.
-    let query = {};
-    if (req.user?.role === "student") {
-      query = { students: req.user.id };
+    let filter;
+
+    if (req.user.role === "professor") {
+      filter = { professorId: req.user.id };
+    } else if (req.user.role === "student") {
+      filter = { students: req.user.id, isArchived: false };
+    } else {
+      return res.status(403).json({
+        success: false,
+        message: "You do not have permission to view classes",
+      });
     }
 
-    const classes = await Class.find(query).sort({ createdAt: -1 });
+    const classes = await Class.find(filter).sort({ createdAt: -1 });
 
     return res.status(200).json({
       success: true,
@@ -87,6 +96,8 @@ const getClasses = async (req, res) => {
   }
 };
 
+
+
 const getClassById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -98,12 +109,25 @@ const getClassById = async (req, res) => {
       });
     }
 
-    const classData = await Class.findById(id);
+    let filter;
+
+    if (req.user.role === "professor") {
+      filter = { _id: id, professorId: req.user.id };
+    } else if (req.user.role === "student") {
+      filter = { _id: id, students: req.user.id, isArchived: false, };
+    } else {
+      return res.status(403).json({
+        success: false,
+        message: "You do not have permission to view this class",
+      });
+    }
+
+    const classData = await Class.findOne(filter);
 
     if (!classData) {
       return res.status(404).json({
         success: false,
-        message: "Class not found",
+        message: "Class not found or you do not have access",
       });
     }
 
@@ -121,11 +145,14 @@ const getClassById = async (req, res) => {
   }
 };
 
+
+
+
 const joinClass = async (req, res) => {
   try {
     const { joinCode } = req.body;
 
-    if (!joinCode?.trim()) {
+    if (typeof joinCode !== "string" || !joinCode.trim()) {
       return res.status(400).json({
         success: false,
         message: "Join code is required",
@@ -134,6 +161,7 @@ const joinClass = async (req, res) => {
 
     const classData = await Class.findOne({
       joinCode: joinCode.trim().toUpperCase(),
+      isArchived: false,
     });
 
     if (!classData) {
@@ -143,20 +171,25 @@ const joinClass = async (req, res) => {
       });
     }
 
-    // Persist the student enrollment in MongoDB if not already added
-    const studentId = req.user.id;
-    const isEnrolled = classData.students.some(
-      (id) => id.toString() === studentId
+    // Prevent the same student from joining twice.
+    const alreadyEnrolled = classData.students.some(
+      (studentId) => studentId.toString() === req.user.id
     );
 
-    if (!isEnrolled) {
-      classData.students.push(studentId);
-      await classData.save();
+    if (alreadyEnrolled) {
+      return res.status(409).json({
+        success: false,
+        message: "You are already enrolled in this class",
+      });
     }
+
+    // Save the authenticated student's ID in MongoDB.
+    classData.students.push(req.user.id);
+    await classData.save();
 
     return res.status(200).json({
       success: true,
-      message: "Enrolled in class successfully",
+      message: "Joined class successfully",
       data: classData,
     });
   } catch (error) {
@@ -168,6 +201,88 @@ const joinClass = async (req, res) => {
     });
   }
 };
+
+
+const updateClass = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid class ID",
+      });
+    }
+
+    const { name, subject, description } = req.body;
+    const updates = {};
+
+    if (name !== undefined) {
+      if (typeof name !== "string" || !name.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Class name cannot be empty",
+        });
+      }
+      updates.name = name.trim();
+    }
+
+    if (subject !== undefined) {
+      if (typeof subject !== "string") {
+        return res.status(400).json({
+          success: false,
+          message: "Subject must be a string",
+        });
+      }
+      updates.subject = subject.trim();
+    }
+
+    if (description !== undefined) {
+      if (typeof description !== "string") {
+        return res.status(400).json({
+          success: false,
+          message: "Description must be a string",
+        });
+      }
+      updates.description = description.trim();
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Provide at least one field to update",
+      });
+    }
+
+    const classData = await Class.findOneAndUpdate(
+      { _id: id, professorId: req.user.id },
+      { $set: updates },
+      { new: true, runValidators: true }
+    );
+
+    if (!classData) {
+      return res.status(404).json({
+        success: false,
+        message: "Class not found or you do not own this class",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Class updated successfully",
+      data: classData,
+    });
+  } catch (error) {
+    console.error("Update class error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
 
 const deleteClass = async (req, res) => {
   try {
@@ -210,10 +325,54 @@ const deleteClass = async (req, res) => {
   }
 };
 
+const archiveClass = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid class ID",
+      });
+    }
+
+    const classData = await Class.findOneAndUpdate(
+      { _id: id, professorId: req.user.id },
+      { isArchived: true },
+      { new: true, runValidators: true }
+    );
+
+    if (!classData) {
+      return res.status(404).json({
+        success: false,
+        message: "Class not found or you do not own this class.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Class archived successfully",
+      data: classData,
+    });
+  } catch (error) {
+    console.error("Archive class error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
 module.exports = {
   createClass,
   getClasses,
   getClassById,
   joinClass,
+  updateClass,
   deleteClass,
+  archiveClass,
 };
+
+

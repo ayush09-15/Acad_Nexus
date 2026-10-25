@@ -21,6 +21,11 @@ const classSchema = new mongoose.Schema(
       default: "",
     },
 
+    isArchived: {
+      type: Boolean,
+      default: false,
+    },
+
     // Display name retained for frontend compatibility.
     professor: {
       type: String,
