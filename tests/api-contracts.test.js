@@ -108,6 +108,15 @@ describe("API Request Header Formation", () => {
     const parsed = JSON.parse(config.body);
     assert.strictEqual(parsed.joinCode, "CS101NET");
   });
+
+  it("properly formats leaveClass request with student auth token", () => {
+    const config = buildRequestConfig("student_token", {
+      method: "POST",
+    });
+
+    assert.strictEqual(config.method, "POST");
+    assert.strictEqual(config.headers.Authorization, "Bearer student_token");
+  });
 });
 
 describe("API Response Error Handling Contracts", () => {

@@ -94,6 +94,15 @@ export function joinClassByCode(joinCode) {
 }
 
 /**
+ * Leave an enrolled class (student-only).
+ */
+export function leaveClass(classId) {
+  return apiRequest(`/classes/${classId}/leave`, {
+    method: "POST",
+  });
+}
+
+/**
  * Create a new class (professor-only).
  */
 export function createClass({ name, subject, description }) {

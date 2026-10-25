@@ -202,6 +202,57 @@ const joinClass = async (req, res) => {
   }
 };
 
+const leaveClass = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid class ID",
+      });
+    }
+
+    const classData = await Class.findById(id);
+
+    if (!classData) {
+      return res.status(404).json({
+        success: false,
+        message: "Class not found",
+      });
+    }
+
+    const isEnrolled = classData.students.some(
+      (studentId) => studentId.toString() === req.user.id
+    );
+
+    if (!isEnrolled) {
+      return res.status(400).json({
+        success: false,
+        message: "You are not enrolled in this class",
+      });
+    }
+
+    classData.students = classData.students.filter(
+      (studentId) => studentId.toString() !== req.user.id
+    );
+    await classData.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Left class successfully",
+      data: { id: classData._id },
+    });
+  } catch (error) {
+    console.error("Leave class error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 
 const updateClass = async (req, res) => {
   try {
@@ -370,6 +421,7 @@ module.exports = {
   getClasses,
   getClassById,
   joinClass,
+  leaveClass,
   updateClass,
   deleteClass,
   archiveClass,

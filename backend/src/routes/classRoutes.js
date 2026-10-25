@@ -7,6 +7,7 @@ const {
   getClasses,
   getClassById,
   joinClass,
+  leaveClass,
   updateClass,
   deleteClass,
   archiveClass,
@@ -31,6 +32,14 @@ router.post(
   authenticateUser,
   authorizeRoles("student"),
   joinClass
+);
+
+// Students can leave an enrolled class.
+router.post(
+  "/:id/leave",
+  authenticateUser,
+  authorizeRoles("student"),
+  leaveClass
 );
 
 // Keep class reading available for authenticated users.
