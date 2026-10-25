@@ -7,7 +7,9 @@ const {
   getClasses,
   getClassById,
   joinClass,
+  updateClass,
   deleteClass,
+  archiveClass,
 } = require("../controllers/classController");
 
 const {
@@ -33,6 +35,21 @@ router.post(
 
 // Keep class reading available for authenticated users.
 router.get("/", authenticateUser, getClasses);
+
+router.put(
+  "/:id",
+  authenticateUser,
+  authorizeRoles("professor"),
+  updateClass
+);
+
+router.patch(
+  "/:id/archive",
+  authenticateUser,
+  authorizeRoles("professor"),
+  archiveClass
+);
+
 router.get("/:id", authenticateUser, getClassById);
 
 // Deletion will get an ownership check in the next step.

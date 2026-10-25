@@ -3,7 +3,8 @@ const cors = require("cors");
 const classRoutes = require("./routes/classRoutes");
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 
 const connectDB = require("./config/db");
 
@@ -24,12 +25,16 @@ app.get("/api/health", (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-const startServer = async () => {
-  await connectDB();
+if (require.main === module) {
+  const startServer = async () => {
+    await connectDB();
 
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-};
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  };
 
-startServer();
+  startServer();
+}
+
+module.exports = app;
