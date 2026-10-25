@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "test": "jest --rootDir .. --runInBand"
+    "test": "jest --runInBand"
   },
   "keywords": [],
   "author": "",
