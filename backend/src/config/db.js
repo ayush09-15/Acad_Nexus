@@ -1,11 +1,13 @@
-
 const mongoose = require("mongoose");
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(
-      process.env.MONGO_URI || "mongodb://127.0.0.1:27017/acad_nexus"
-    );
+    const mongoUri =
+      process.env.MONGODB_URI ||
+      process.env.MONGO_URI ||
+      "mongodb://127.0.0.1:27017/acad_nexus";
+
+    await mongoose.connect(mongoUri);
 
     console.log("MongoDB connected successfully");
   } catch (error) {

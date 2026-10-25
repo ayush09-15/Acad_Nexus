@@ -52,11 +52,12 @@ const askPassword = (question) =>
 
 async function createAdmin() {
   try {
-    if (!process.env.MONGO_URI) {
-      throw new Error("MONGO_URI is missing from backend/.env");
+    const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+    if (!mongoUri) {
+      throw new Error("MONGO_URI or MONGODB_URI is missing from backend/.env");
     }
 
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(mongoUri);
     console.log("MongoDB connected.");
 
     const adminExists = await User.exists({ role: "admin" });
