@@ -115,7 +115,7 @@ export default function ProfessorManagement({ onBack }) {
         throw new Error(data.message || "Failed to create professor account.");
       }
 
-      setFormSuccess(`Account created for ${newName}! You can now approve them below.`);
+      setFormSuccess(`Account created for ${newName}! The professor is approved and ready to log in.`);
       setNewName("");
       setNewEmail("");
       setNewPassword("");

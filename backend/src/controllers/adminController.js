@@ -36,12 +36,12 @@ const createProfessor = async (req, res) => {
       email: normalizedEmail,
       password,
       role: "professor",
-      professorApproved: false,
+      professorApproved: true,
     });
 
     return res.status(201).json({
       success: true,
-      message: "Professor account created. Approval is required before login.",
+      message: "Professor account created and approved successfully.",
       data: {
         user: {
           id: professor._id.toString(),
