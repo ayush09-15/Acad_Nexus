@@ -36,9 +36,17 @@ function getAuthHeaders() {
 async function apiRequest(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
 
+  const headers = getAuthHeaders();
+  if (typeof FormData !== "undefined" && options.body instanceof FormData) {
+    delete headers["Content-Type"];
+  }
+
   const config = {
-    headers: getAuthHeaders(),
     ...options,
+    headers: {
+      ...headers,
+      ...options.headers,
+    },
   };
 
   const response = await fetch(url, config);
@@ -129,6 +137,47 @@ export function deleteClass(classId) {
   return apiRequest(`/classes/${classId}`, {
     method: "DELETE",
   });
+}
+
+// ── Study Materials & RAG API ─────────────────────────────────────────
+
+/**
+ * Upload a PDF study material to a class (professor-only).
+ */
+export function uploadClassMaterial(classId, file, title) {
+  const formData = new FormData();
+  formData.append("file", file);
+  if (title) {
+    formData.append("title", title);
+  }
+
+  return apiRequest(`/classes/${classId}/materials`, {
+    method: "POST",
+    body: formData,
+  });
+}
+
+/**
+ * Fetch all study materials for a class.
+ */
+export function fetchClassMaterials(classId) {
+  return apiRequest(`/classes/${classId}/materials`);
+}
+
+/**
+ * Delete a study material by its ID (professor-only).
+ */
+export function deleteClassMaterial(materialId) {
+  return apiRequest(`/materials/${materialId}`, {
+    method: "DELETE",
+  });
+}
+
+/**
+ * Get download URL for a material.
+ */
+export function getMaterialDownloadUrl(materialId) {
+  return `${API_BASE_URL}/materials/${materialId}/download`;
 }
 
 // ── Admin API ─────────────────────────────────────────────────────────

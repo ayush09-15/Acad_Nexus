@@ -123,6 +123,22 @@ describe("API Request Header Formation", () => {
     assert.strictEqual(config.headers.Authorization, "Bearer admin_token");
     assert.strictEqual(config.headers["Content-Type"], "application/json");
   });
+
+  it("properly formats uploadClassMaterial request with multipart auth", () => {
+    const config = buildRequestConfig("prof_token", {
+      method: "POST",
+    });
+    delete config.headers["Content-Type"];
+
+    assert.strictEqual(config.method, "POST");
+    assert.strictEqual(config.headers.Authorization, "Bearer prof_token");
+    assert.strictEqual(config.headers["Content-Type"], undefined);
+  });
+
+  it("properly formats fetchClassMaterials request", () => {
+    const config = buildRequestConfig("user_token");
+    assert.strictEqual(config.headers.Authorization, "Bearer user_token");
+  });
 });
 
 describe("API Response Error Handling Contracts", () => {
