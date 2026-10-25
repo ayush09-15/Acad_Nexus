@@ -221,7 +221,7 @@ export default function ProfessorManagement({ onBack }) {
         {showAddForm && (
           <form className="pm-add-form" onSubmit={handleCreateProfessor}>
             <h3>Add New Professor</h3>
-            <p>Create credentials for an instructor account. You can approve their account after creation.</p>
+            <p>Create credentials for an instructor account. The account is approved immediately upon creation.</p>
 
             {formError && <p className="pm-error" role="alert">{formError}</p>}
 

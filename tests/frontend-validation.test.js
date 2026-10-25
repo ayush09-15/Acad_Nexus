@@ -267,3 +267,37 @@ describe("Professor Workspace Class Authorization Filtering", () => {
     assert.strictEqual(filtered[0]._id, "c2");
   });
 });
+
+describe("Admin Dashboard Workspace and Filtering", () => {
+  const mockStudents = [
+    { id: "s1", name: "Alice Johnson", email: "alice@university.edu" },
+    { id: "s2", name: "Bob Smith", email: "bob@university.edu" },
+    { id: "s3", name: "Carol Davis", email: "carol@college.org" },
+  ];
+
+  it("filters students case-insensitively by name", () => {
+    const query = "alice";
+    const filtered = mockStudents.filter((s) =>
+      `${s.name} ${s.email}`.toLowerCase().includes(query.toLowerCase())
+    );
+    assert.strictEqual(filtered.length, 1);
+    assert.strictEqual(filtered[0].name, "Alice Johnson");
+  });
+
+  it("filters students case-insensitively by email domain", () => {
+    const query = "college.org";
+    const filtered = mockStudents.filter((s) =>
+      `${s.name} ${s.email}`.toLowerCase().includes(query.toLowerCase())
+    );
+    assert.strictEqual(filtered.length, 1);
+    assert.strictEqual(filtered[0].id, "s3");
+  });
+
+  it("returns all students when search query is empty", () => {
+    const query = "";
+    const filtered = mockStudents.filter((s) =>
+      `${s.name} ${s.email}`.toLowerCase().includes(query.toLowerCase())
+    );
+    assert.strictEqual(filtered.length, 3);
+  });
+});

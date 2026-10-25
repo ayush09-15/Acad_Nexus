@@ -54,12 +54,108 @@
   border-radius: 10px;
   color: #c5cbe0;
   font-size: 14px;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s, color 0.2s;
+}
+
+.admin-nav-item:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .admin-nav-item.active {
   color: #fff;
   background: #6658e8;
   box-shadow: 0 6px 18px #6658e844;
+}
+
+.admin-main .professor-management {
+  padding: 0;
+  min-height: auto;
+  background: transparent;
+}
+
+.admin-table-card {
+  background: #fff;
+  border: 1px solid #e9ebf2;
+  border-radius: 16px;
+  box-shadow: 0 4px 18px #151b3506;
+  overflow: hidden;
+  margin-top: 24px;
+}
+
+.admin-table-heading {
+  padding: 22px 26px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f0f2f7;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.admin-table-heading h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 750;
+}
+
+.admin-table-heading p {
+  margin: 4px 0 0;
+  color: #8790a2;
+  font-size: 13px;
+}
+
+.admin-search-input {
+  padding: 10px 14px;
+  border: 1px solid #dcdfe8;
+  border-radius: 9px;
+  font-size: 13px;
+  min-width: 260px;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.admin-table th {
+  background: #fcfcff;
+  padding: 14px 24px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border-bottom: 1px solid #f0f2f7;
+}
+
+.admin-table td {
+  padding: 16px 24px;
+  border-bottom: 1px solid #f4f5f9;
+  font-size: 13px;
+  color: #1e293b;
+}
+
+.admin-table tr:hover td {
+  background: #fafbff;
+}
+
+.admin-role-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: #e0e7ff;
+  color: #4338ca;
 }
 
 .admin-sidebar-note {
