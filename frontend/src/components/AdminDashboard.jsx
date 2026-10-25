@@ -9,7 +9,7 @@ export default function AdminDashboard() {
   );
   const [showProfessorManagement, setShowProfessorManagement] = useState(false);
 
-  const [message, setMessage] = useState("");
+  const [message] = useState("");
   const navigate = useNavigate();
 
   function handleLogout() {

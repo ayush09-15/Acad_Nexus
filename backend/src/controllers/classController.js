@@ -2,8 +2,6 @@ const crypto = require("crypto");
 const mongoose = require("mongoose");
 const Class = require("../models/Class");
 
-
-
 const createClass = async (req, res) => {
   try {
     const { name, subject, description } = req.body;
@@ -64,10 +62,15 @@ const createClass = async (req, res) => {
   }
 };
 
-
 const getClasses = async (req, res) => {
   try {
-    const classes = await Class.find().sort({ createdAt: -1 });
+    // If the authenticated user is a student, only return classes they have enrolled in.
+    let query = {};
+    if (req.user?.role === "student") {
+      query = { students: req.user.id };
+    }
+
+    const classes = await Class.find(query).sort({ createdAt: -1 });
 
     return res.status(200).json({
       success: true,
@@ -118,7 +121,6 @@ const getClassById = async (req, res) => {
   }
 };
 
-
 const joinClass = async (req, res) => {
   try {
     const { joinCode } = req.body;
@@ -141,9 +143,20 @@ const joinClass = async (req, res) => {
       });
     }
 
+    // Persist the student enrollment in MongoDB if not already added
+    const studentId = req.user.id;
+    const isEnrolled = classData.students.some(
+      (id) => id.toString() === studentId
+    );
+
+    if (!isEnrolled) {
+      classData.students.push(studentId);
+      await classData.save();
+    }
+
     return res.status(200).json({
       success: true,
-      message: "Class found successfully",
+      message: "Enrolled in class successfully",
       data: classData,
     });
   } catch (error) {
@@ -155,8 +168,6 @@ const joinClass = async (req, res) => {
     });
   }
 };
-
-
 
 const deleteClass = async (req, res) => {
   try {
@@ -198,9 +209,6 @@ const deleteClass = async (req, res) => {
     });
   }
 };
-
-
-
 
 module.exports = {
   createClass,
