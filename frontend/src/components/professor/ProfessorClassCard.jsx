@@ -15,6 +15,7 @@ export default function ProfessorClassCard({
   onDelete,
   onEdit,
   onViewDetails,
+  onOpenMaterials,
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -92,6 +93,25 @@ export default function ProfessorClassCard({
         <span>👥 {studentCount} {studentCount === 1 ? "student" : "students"}</span>
 
         <div className="prof-card-actions">
+          {onOpenMaterials && (
+            <button
+              type="button"
+              className="prof-secondary-btn"
+              style={{
+                padding: "5px 10px",
+                fontSize: "12px",
+                borderColor: "#bae6fd",
+                color: "#0369a1",
+                background: "#f0f9ff",
+                fontWeight: 650,
+              }}
+              onClick={() => onOpenMaterials(classItem)}
+              title="Upload and manage study materials for RAG"
+            >
+              📄 Materials
+            </button>
+          )}
+
           {onViewDetails && (
             <button
               type="button"

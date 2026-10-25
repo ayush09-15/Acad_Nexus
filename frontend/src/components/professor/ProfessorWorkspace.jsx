@@ -16,6 +16,7 @@ import ProfessorClassCard from "./ProfessorClassCard";
 import CreateClassModal from "./CreateClassModal";
 import EditClassModal from "./EditClassModal";
 import ClassDetailsModal from "./ClassDetailsModal";
+import ClassMaterialsModal from "./ClassMaterialsModal";
 import "./ProfessorWorkspace.css";
 import "../ui/FeedbackComponents.css";
 
@@ -35,6 +36,7 @@ export default function ProfessorWorkspace() {
   // Modal and dialog states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [detailedClass, setDetailedClass] = useState(null);
+  const [materialsClass, setMaterialsClass] = useState(null);
   const [editingClass, setEditingClass] = useState(null);
   const [classToDelete, setClassToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -362,6 +364,7 @@ export default function ProfessorWorkspace() {
                   onDelete={promptDeleteClass}
                   onEdit={handleEditClass}
                   onViewDetails={(item) => setDetailedClass(item)}
+                  onOpenMaterials={(item) => setMaterialsClass(item)}
                 />
               ))}
             </section>
@@ -389,6 +392,13 @@ export default function ProfessorWorkspace() {
         isOpen={Boolean(detailedClass)}
         classItem={detailedClass}
         onClose={() => setDetailedClass(null)}
+      />
+
+      {/* Study Materials & RAG Knowledge Base Modal */}
+      <ClassMaterialsModal
+        isOpen={Boolean(materialsClass)}
+        classItem={materialsClass}
+        onClose={() => setMaterialsClass(null)}
       />
 
       {/* Confirmation Dialog for Destructive Actions */}

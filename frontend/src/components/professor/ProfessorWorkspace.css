@@ -549,3 +549,36 @@
     padding: 20px 16px;
   }
 }
+
+/* RAG Status Badges */
+.rag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.rag-badge--uploaded {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.rag-badge--processing {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.rag-badge--indexed {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.rag-badge--failed {
+  background: #fee2e2;
+  color: #b91c1c;
+}

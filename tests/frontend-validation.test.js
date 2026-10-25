@@ -301,3 +301,40 @@ describe("Admin Dashboard Workspace and Filtering", () => {
     assert.strictEqual(filtered.length, 3);
   });
 });
+
+describe("Study Material Upload and Validation", () => {
+  function validateUploadFile(fileName, fileSize) {
+    if (!fileName?.toLowerCase().endsWith(".pdf")) {
+      return "Only PDF files (.pdf) are supported for RAG indexing.";
+    }
+    if (fileSize > 25 * 1024 * 1024) {
+      return "File size exceeds 25 MB limit. Please upload a smaller PDF.";
+    }
+    return "";
+  }
+
+  it("rejects non-PDF files", () => {
+    assert.strictEqual(
+      validateUploadFile("lecture_notes.docx", 1024),
+      "Only PDF files (.pdf) are supported for RAG indexing."
+    );
+    assert.strictEqual(
+      validateUploadFile("slides.pptx", 1024),
+      "Only PDF files (.pdf) are supported for RAG indexing."
+    );
+  });
+
+  it("rejects files larger than 25MB", () => {
+    assert.strictEqual(
+      validateUploadFile("huge_textbook.pdf", 30 * 1024 * 1024),
+      "File size exceeds 25 MB limit. Please upload a smaller PDF."
+    );
+  });
+
+  it("accepts valid PDF within 25MB limit", () => {
+    assert.strictEqual(
+      validateUploadFile("os_chapter_1.pdf", 5 * 1024 * 1024),
+      ""
+    );
+  });
+});
