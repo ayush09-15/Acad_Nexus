@@ -139,6 +139,19 @@ describe("API Request Header Formation", () => {
     const config = buildRequestConfig("user_token");
     assert.strictEqual(config.headers.Authorization, "Bearer user_token");
   });
+
+  it("properly formats askClassAssistant request payload and auth", () => {
+    const payload = { question: "What is deadlock in OS?" };
+    const config = buildRequestConfig("student_token", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+
+    assert.strictEqual(config.method, "POST");
+    assert.strictEqual(config.headers.Authorization, "Bearer student_token");
+    const parsed = JSON.parse(config.body);
+    assert.strictEqual(parsed.question, "What is deadlock in OS?");
+  });
 });
 
 describe("API Response Error Handling Contracts", () => {

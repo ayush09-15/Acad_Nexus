@@ -415,6 +415,79 @@ const archiveClass = async (req, res) => {
   }
 };
 
+const chatWithClassAssistant = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { question } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid class ID",
+      });
+    }
+
+    if (!question || !question.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Question is required",
+      });
+    }
+
+    let filter;
+    if (req.user.role === "professor") {
+      filter = { _id: id, professorId: req.user.id };
+    } else if (req.user.role === "student") {
+      filter = { _id: id, students: req.user.id, isArchived: false };
+    } else {
+      return res.status(403).json({
+        success: false,
+        message: "You do not have permission to access this classroom chat.",
+      });
+    }
+
+    const classData = await Class.findOne(filter);
+    if (!classData) {
+      return res.status(404).json({
+        success: false,
+        message: "Class not found or access denied.",
+      });
+    }
+
+    const aiServiceUrl = process.env.AI_SERVICE_URL || "http://127.0.0.1:8000";
+    const aiResponse = await fetch(`${aiServiceUrl}/api/ai/query`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        class_id: id,
+        question: question.trim(),
+      }),
+    });
+
+    if (!aiResponse.ok) {
+      const errData = await aiResponse.json().catch(() => ({}));
+      throw new Error(errData.detail || "AI service returned an error.");
+    }
+
+    const aiData = await aiResponse.json();
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        question: question.trim(),
+        answer: aiData.answer,
+        citations: aiData.citations || [],
+        sourcesCount: aiData.sources_count || 0,
+      },
+    });
+  } catch (error) {
+    console.error("Chat assistant error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "The AI teaching assistant is temporarily unavailable. Please verify the AI service is running.",
+    });
+  }
+};
 
 module.exports = {
   createClass,
@@ -425,6 +498,7 @@ module.exports = {
   updateClass,
   deleteClass,
   archiveClass,
+  chatWithClassAssistant,
 };
 
 

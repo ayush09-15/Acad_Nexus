@@ -180,6 +180,16 @@ export function getMaterialDownloadUrl(materialId) {
   return `${API_BASE_URL}/materials/${materialId}/download`;
 }
 
+/**
+ * Ask the classroom RAG AI assistant a document-grounded question.
+ */
+export function askClassAssistant(classId, question) {
+  return apiRequest(`/classes/${classId}/chat`, {
+    method: "POST",
+    body: JSON.stringify({ question }),
+  });
+}
+
 // ── Admin API ─────────────────────────────────────────────────────────
 
 /**

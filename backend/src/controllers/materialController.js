@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const fs = require("fs");
+const path = require("path");
 const Material = require("../models/Material");
 const Class = require("../models/Class");
 
@@ -58,9 +59,33 @@ const uploadMaterial = async (req, res) => {
       ragStatus: "uploaded",
     });
 
+    // Trigger background RAG vector indexing via AI service
+    const aiServiceUrl = process.env.AI_SERVICE_URL || "http://127.0.0.1:8000";
+    try {
+      const aiResponse = await fetch(`${aiServiceUrl}/api/ai/ingest-path`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          class_id: classData._id.toString(),
+          material_id: material._id.toString(),
+          document_title: title,
+          file_path: path.resolve(req.file.path),
+        }),
+      });
+
+      if (aiResponse.ok) {
+        const aiData = await aiResponse.json();
+        material.ragStatus = "indexed";
+        material.chunkCount = aiData.chunks_indexed || 0;
+        await material.save();
+      }
+    } catch {
+      // AI service might be offline or starting up; material stays as 'uploaded'
+    }
+
     return res.status(201).json({
       success: true,
-      message: "Study material uploaded successfully and queued for RAG indexing.",
+      message: "Study material uploaded successfully and processed for RAG indexing.",
       data: material,
     });
   } catch (error) {
@@ -176,6 +201,16 @@ const deleteMaterial = async (req, res) => {
     }
 
     await Material.findByIdAndDelete(id);
+
+    // Remove vectors from AI vector store
+    const aiServiceUrl = process.env.AI_SERVICE_URL || "http://127.0.0.1:8000";
+    try {
+      await fetch(`${aiServiceUrl}/api/ai/materials/${id}`, {
+        method: "DELETE",
+      });
+    } catch {
+      // Non-blocking cleanup
+    }
 
     return res.status(200).json({
       success: true,

@@ -11,6 +11,7 @@ const {
   updateClass,
   deleteClass,
   archiveClass,
+  chatWithClassAssistant,
 } = require("../controllers/classController");
 
 const {
@@ -60,6 +61,13 @@ router.patch(
 );
 
 router.get("/:id", authenticateUser, getClassById);
+
+// Ask the document-grounded AI classroom assistant
+router.post(
+  "/:id/chat",
+  authenticateUser,
+  chatWithClassAssistant
+);
 
 // Deletion will get an ownership check in the next step.
 // Temporarily require authentication and professor role.
