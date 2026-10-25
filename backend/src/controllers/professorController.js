@@ -24,6 +24,7 @@ const getMyProfile = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: profile,
+      profile,
     });
   } catch (error) {
     console.error("Get professor profile error:", error.message);
@@ -69,6 +70,7 @@ const updateMyProfile = async (req, res) => {
       success: true,
       message: "Professor profile updated successfully.",
       data: profile,
+      profile,
     });
   } catch (error) {
     console.error("Update professor profile error:", error.message);

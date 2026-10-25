@@ -182,8 +182,8 @@ export default function ProfessorWorkspace() {
     try {
       setProfileLoading(true);
       const res = await fetchProfessorProfile();
-      if (res.data?.profile) {
-        const p = res.data.profile;
+      const p = res.data?.profile || res.data;
+      if (p && typeof p === "object") {
         setProfile(p);
         setProfileForm({
           department: p.department || "",
@@ -212,8 +212,34 @@ export default function ProfessorWorkspace() {
       setProfileSaving(true);
       setError("");
       const res = await updateProfessorProfile(profileForm);
-      if (res.data?.profile) {
-        setProfile(res.data.profile);
+      const p = res.data?.profile || res.data;
+      if (p && typeof p === "object") {
+        setProfile(p);
+        setProfileForm({
+          department: p.department || "",
+          designation: p.designation || "",
+          qualification: p.qualification || "",
+          institution: p.institution || "",
+          cabinOffice: p.cabinOffice || "",
+          officeHours: p.officeHours || "",
+          bio: p.bio || "",
+        });
+
+        // Keep local user session in sync with updated profile fields
+        try {
+          const stored = JSON.parse(localStorage.getItem("acadNexusUser") || "{}");
+          const updated = {
+            ...stored,
+            department: p.department || stored.department,
+            designation: p.designation || stored.designation,
+            qualification: p.qualification || stored.qualification,
+            institution: p.institution || stored.institution,
+          };
+          localStorage.setItem("acadNexusUser", JSON.stringify(updated));
+          window.dispatchEvent(new Event("acadNexusAuthChanged"));
+        } catch {
+          // ignore localStorage JSON error
+        }
       }
       setIsEditingProfile(false);
       setSuccessNotice("Academic profile updated successfully.");

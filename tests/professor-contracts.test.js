@@ -135,4 +135,31 @@ describe("Professor Model & Profile Contracts", () => {
     assert.strictEqual(revoked.professorDoc.approvalStatus, "pending");
     assert.strictEqual(revoked.professorDoc.approvedAt, null);
   });
+
+  it("resolves professor profile payload from either res.data or res.data.profile", () => {
+    function resolveProfile(res) {
+      const p = res?.data?.profile || res?.data;
+      if (p && typeof p === "object") {
+        return {
+          department: p.department || "",
+          designation: p.designation || "",
+        };
+      }
+      return null;
+    }
+
+    // Direct object shape (what backend currently sends)
+    const directRes = { success: true, data: { department: "Computer Science", designation: "Professor" } };
+    assert.deepStrictEqual(resolveProfile(directRes), {
+      department: "Computer Science",
+      designation: "Professor",
+    });
+
+    // Nested object shape
+    const nestedRes = { success: true, data: { profile: { department: "Physics", designation: "Lecturer" } } };
+    assert.deepStrictEqual(resolveProfile(nestedRes), {
+      department: "Physics",
+      designation: "Lecturer",
+    });
+  });
 });
