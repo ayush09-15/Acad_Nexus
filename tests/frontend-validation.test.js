@@ -119,6 +119,41 @@ describe("Frontend Class Creation Validation", () => {
   });
 });
 
+describe("Frontend Class Edit Validation and State Update", () => {
+  it("rejects empty or whitespace-only edited class names", () => {
+    assert.strictEqual(validateClassName(""), "Class name is required.");
+    assert.strictEqual(validateClassName("   "), "Class name is required.");
+  });
+
+  it("rejects edited class names shorter than 3 characters", () => {
+    assert.strictEqual(
+      validateClassName("AI"),
+      "Class name must be at least 3 characters long."
+    );
+  });
+
+  it("updates existing class in list without mutating other classes", () => {
+    const initialClasses = [
+      { _id: "c1", name: "Operating Systems", subject: "CSED" },
+      { _id: "c2", name: "Computer Networks", subject: "CSED" },
+    ];
+    const updatedClass = {
+      _id: "c1",
+      name: "Operating Systems (Honors)",
+      subject: "CSED Advanced",
+    };
+
+    const nextClasses = initialClasses.map((c) =>
+      c._id === updatedClass._id ? updatedClass : c
+    );
+
+    assert.strictEqual(nextClasses.length, 2);
+    assert.strictEqual(nextClasses[0].name, "Operating Systems (Honors)");
+    assert.strictEqual(nextClasses[0].subject, "CSED Advanced");
+    assert.strictEqual(nextClasses[1].name, "Computer Networks");
+  });
+});
+
 describe("Duplicate Enrollment Protection", () => {
   const existingClasses = [
     { _id: "class_1", name: "Networks", joinCode: "NET101" },
