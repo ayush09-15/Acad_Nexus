@@ -14,6 +14,7 @@ import {
 } from "../ui/FeedbackComponents";
 import ProfessorClassCard from "./ProfessorClassCard";
 import CreateClassModal from "./CreateClassModal";
+import EditClassModal from "./EditClassModal";
 import ClassDetailsModal from "./ClassDetailsModal";
 import "./ProfessorWorkspace.css";
 import "../ui/FeedbackComponents.css";
@@ -34,6 +35,7 @@ export default function ProfessorWorkspace() {
   // Modal and dialog states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [detailedClass, setDetailedClass] = useState(null);
+  const [editingClass, setEditingClass] = useState(null);
   const [classToDelete, setClassToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -139,10 +141,15 @@ export default function ProfessorWorkspace() {
   }
 
   function handleEditClass(classItem) {
-    setInfoNotice(
-      `Editing "${classItem.name}" is staged for the upcoming backend update endpoint. Changes will be saved once Sumit's update API is deployed.`
+    setEditingClass(classItem);
+  }
+
+  function handleClassUpdated(updatedClass) {
+    setClasses((prev) =>
+      prev.map((c) => (c._id === updatedClass._id ? updatedClass : c))
     );
-    setTimeout(() => setInfoNotice(""), 6000);
+    setSuccessNotice(`Class "${updatedClass.name}" was successfully updated.`);
+    setTimeout(() => setSuccessNotice(""), 4000);
   }
 
   // Filtered classes based on search
@@ -367,6 +374,14 @@ export default function ProfessorWorkspace() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onClassCreated={handleClassCreated}
+      />
+
+      {/* Edit Class Modal */}
+      <EditClassModal
+        isOpen={Boolean(editingClass)}
+        classItem={editingClass}
+        onClose={() => setEditingClass(null)}
+        onClassUpdated={handleClassUpdated}
       />
 
       {/* Class Details & Invitation Modal */}
