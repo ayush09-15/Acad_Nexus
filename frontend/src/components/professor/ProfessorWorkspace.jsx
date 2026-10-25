@@ -499,7 +499,7 @@ export default function ProfessorWorkspace() {
         <header className="prof-topbar">
           <div>
             <h1>
-              {activeTab === "Dashboard" && `Welcome back, ${userName.split(" ")[0]}`}
+              {activeTab === "Dashboard" && `Welcome back, ${userName}`}
               {activeTab === "Classes" && "My Course Classrooms"}
               {activeTab === "Materials" && "All Course Study Materials"}
               {activeTab === "Students" && "Student Directory & Rosters"}
