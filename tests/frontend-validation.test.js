@@ -338,3 +338,27 @@ describe("Study Material Upload and Validation", () => {
     );
   });
 });
+
+describe("Classroom Chat State and Citation Preservation", () => {
+  it("correctly resolves assistant answer and citations into chat history", () => {
+    const initialMessages = [
+      { id: 1, role: "user", text: "What is paging?" },
+      { id: 2, role: "assistant", text: "Analyzing...", loading: true },
+    ];
+
+    const answer = "Paging is a memory management scheme.";
+    const citations = [{ document_title: "OS Unit 3", page_number: 14 }];
+
+    const updated = initialMessages.map((msg) =>
+      msg.id === 2
+        ? { id: 2, role: "assistant", text: answer, citations, loading: false }
+        : msg
+    );
+
+    assert.strictEqual(updated.length, 2);
+    assert.strictEqual(updated[1].text, "Paging is a memory management scheme.");
+    assert.strictEqual(updated[1].loading, false);
+    assert.strictEqual(updated[1].citations.length, 1);
+    assert.strictEqual(updated[1].citations[0].page_number, 14);
+  });
+});

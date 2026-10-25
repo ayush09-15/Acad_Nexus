@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import {
   fetchClasses,
   leaveClass as apiLeaveClass,
+  askClassAssistant,
   getStoredUser,
   clearAuth,
 } from "../services/api";
@@ -62,6 +63,7 @@ export default function StudentDashboard() {
     loadFromStorage("acad-nexus-chat-messages", {})
   );
   const [chatInput, setChatInput] = useState("");
+  const [isChatSubmitting, setIsChatSubmitting] = useState(false);
 
   // Save chat history whenever messages change.
   useEffect(() => {
@@ -155,32 +157,83 @@ export default function StudentDashboard() {
     }
   }
 
-  function sendChatMessage(event) {
+  async function sendChatMessage(event) {
     event.preventDefault();
 
     const question = chatInput.trim();
+    if (!question || isChatSubmitting) return;
 
-    if (!question) return;
+    const currentClass = classes.find((c) => c.name === activePage);
+    const classId = currentClass?._id || currentClass?.id;
 
+    const userMsgId = Date.now();
+    const assistantMsgId = userMsgId + 1;
+
+    // Immediately render user's question and placeholder thinking message
     setChatMessages((previousMessages) => ({
       ...previousMessages,
       [activePage]: [
         ...(previousMessages[activePage] || []),
         {
-          id: Date.now(),
+          id: userMsgId,
           role: "user",
           text: question,
         },
         {
-          id: Date.now() + 1,
+          id: assistantMsgId,
           role: "assistant",
-          text:
-            "This is a demo response. AI answers based on your professor's PDFs will be available when the backend is connected.",
+          text: "Analyzing course study materials...",
+          loading: true,
+          citations: [],
         },
       ],
     }));
 
     setChatInput("");
+    setIsChatSubmitting(true);
+
+    try {
+      if (!classId) {
+        throw new Error("Classroom reference not found. Please re-open the class.");
+      }
+
+      const response = await askClassAssistant(classId, question);
+      const { answer, citations } = response.data;
+
+      setChatMessages((previousMessages) => ({
+        ...previousMessages,
+        [activePage]: (previousMessages[activePage] || []).map((msg) =>
+          msg.id === assistantMsgId
+            ? {
+                id: assistantMsgId,
+                role: "assistant",
+                text: answer,
+                citations: citations || [],
+                loading: false,
+              }
+            : msg
+        ),
+      }));
+    } catch (err) {
+      setChatMessages((previousMessages) => ({
+        ...previousMessages,
+        [activePage]: (previousMessages[activePage] || []).map((msg) =>
+          msg.id === assistantMsgId
+            ? {
+                id: assistantMsgId,
+                role: "assistant",
+                text:
+                  err.message ||
+                  "The AI classroom assistant is temporarily unavailable. Please verify the AI service is active.",
+                citations: [],
+                loading: false,
+              }
+            : msg
+        ),
+      }));
+    } finally {
+      setIsChatSubmitting(false);
+    }
   }
 
   // Search notes by title or subject.
@@ -625,7 +678,24 @@ export default function StudentDashboard() {
                     <span className="chat-role">
                       {chatMessage.role === "user" ? "You" : "Acad Nexus AI"}
                     </span>
-                    <p>{chatMessage.text}</p>
+                    <p style={{ whiteSpace: "pre-wrap" }}>{chatMessage.text}</p>
+
+                    {chatMessage.citations && chatMessage.citations.length > 0 && (
+                      <div className="chat-citations-bar">
+                        <span className="chat-citations-label">Sources:</span>
+                        <div className="chat-citations-list">
+                          {chatMessage.citations.map((cite, i) => (
+                            <span
+                              key={i}
+                              className="citation-pill"
+                              title={`Retrieved from ${cite.document_title}`}
+                            >
+                              📄 {cite.document_title} • Page {cite.page_number}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))
               )}
@@ -636,21 +706,26 @@ export default function StudentDashboard() {
                 type="text"
                 value={chatInput}
                 onChange={(event) => setChatInput(event.target.value)}
-                placeholder={`Ask a question about ${activePage}...`}
+                placeholder={
+                  isChatSubmitting
+                    ? "Classroom assistant is thinking..."
+                    : `Ask a question about ${activePage}...`
+                }
                 aria-label="Ask your class assistant"
+                disabled={isChatSubmitting}
               />
 
               <button
                 type="submit"
                 className="primary-button"
-                disabled={!chatInput.trim()}
+                disabled={!chatInput.trim() || isChatSubmitting}
               >
-                Send →
+                {isChatSubmitting ? "Thinking…" : "Send →"}
               </button>
             </form>
 
             <p className="chat-disclaimer">
-              Demo mode: responses are placeholders and are not based on uploaded PDFs.
+              Grounded AI: Answers are derived from your course's uploaded study materials with verified source citations.
             </p>
           </section>
         )}
