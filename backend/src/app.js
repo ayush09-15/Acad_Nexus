@@ -3,6 +3,7 @@ const cors = require("cors");
 const classRoutes = require("./routes/classRoutes");
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const materialRoutes = require("./routes/materialRoutes");
 const path = require("path");
 require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/classes", classRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api", materialRoutes);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({

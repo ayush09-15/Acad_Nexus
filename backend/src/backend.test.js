@@ -36,4 +36,11 @@ describe("Backend API Tests", () => {
       "Authentication token is required."
     );
   });
+
+  test("GET /api/classes/123/materials should reject an unauthenticated request", async () => {
+    const response = await request(app).get("/api/classes/123/materials");
+
+    expect(response.statusCode).toBe(401);
+    expect(response.body.success).toBe(false);
+  });
 });
