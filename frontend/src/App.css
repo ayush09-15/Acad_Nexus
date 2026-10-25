@@ -925,6 +925,88 @@ h2 {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
+/* Structured Markdown rendering inside chat messages */
+.chat-formatted-body {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: inherit;
+}
+
+.chat-body-paragraph {
+  margin: 0 0 10px;
+  line-height: 1.65;
+}
+
+.chat-body-paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.chat-body-heading {
+  margin: 14px 0 6px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.2px;
+}
+
+.chat-body-divider {
+  margin: 12px 0;
+  border: 0;
+  border-top: 1px solid #e2e8f0;
+}
+
+.chat-bullet-list {
+  margin: 4px 0 10px 18px;
+  padding: 0;
+  list-style-type: disc;
+}
+
+.chat-bullet-item {
+  margin-bottom: 5px;
+  line-height: 1.6;
+}
+
+.chat-numbered-list {
+  margin: 4px 0 10px 20px;
+  padding: 0;
+  list-style-type: decimal;
+}
+
+.chat-numbered-item {
+  margin-bottom: 5px;
+  line-height: 1.6;
+}
+
+.chat-bold-text {
+  font-weight: 650;
+  color: #0f172a;
+}
+
+.chat-math-code,
+.chat-inline-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12.5px;
+  background: rgba(15, 23, 42, 0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #094067;
+}
+
+.chat-inline-citation {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #0284c7;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 5px;
+  padding: 1px 6px;
+  margin: 0 3px;
+  vertical-align: middle;
+}
+
 .chat-input-form {
   display: flex;
   align-items: center;

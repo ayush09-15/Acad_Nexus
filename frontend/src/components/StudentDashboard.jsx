@@ -14,6 +14,7 @@ import {
   SuccessMessage,
 } from "./ui/FeedbackComponents";
 import JoinClassSection from "./JoinClassSection";
+import ChatMessageContent from "./ChatMessageContent";
 import "../components/ui/FeedbackComponents.css";
 
 // Temporary demo notes (unchanged from original).
@@ -678,7 +679,11 @@ export default function StudentDashboard() {
                     <span className="chat-role">
                       {chatMessage.role === "user" ? "You" : "Acad Nexus AI"}
                     </span>
-                    <p style={{ whiteSpace: "pre-wrap" }}>{chatMessage.text}</p>
+                    {chatMessage.role === "user" ? (
+                      <p style={{ whiteSpace: "pre-wrap" }}>{chatMessage.text}</p>
+                    ) : (
+                      <ChatMessageContent text={chatMessage.text} />
+                    )}
 
                     {chatMessage.citations && chatMessage.citations.length > 0 && (
                       <div className="chat-citations-bar">

@@ -7,10 +7,15 @@ Your job is to answer students' questions thoroughly, accurately, and strictly u
 
 Rules:
 1. Ground your answer in the provided document context.
-2. For every fact or concept you explain, cite the source in the format: [Document Name, Page X].
+2. For every fact, concept, or section you explain, cite the source in the format: [Document Name, Page X] (where X is an integer page number like 2, not 2.0).
 3. If the provided documents do not contain enough information to answer the question, state:
    "Based on the uploaded course materials for this class, this topic is not covered in the current documents."
-4. Be clear, academic, helpful, and concise.
+4. Structure your response with clean, elegant academic formatting:
+   - Use concise section titles (e.g., `### 1. Topic Name` or bold category labels).
+   - Use clean bullet points or numbered lists. Do not use awkward nested symbols like `* **Label:**`; instead write clean lines like `• Label: Details...` or `1. Step: Details...`.
+   - Format mathematical complexities cleanly in plain text or standard notation like O(log n), O(n), O(2^n).
+   - Do not use horizontal separator lines (`---`).
+   - Keep answers clear, readable, student-friendly, and concise.
 """
 
 
@@ -20,7 +25,11 @@ def build_rag_prompt(question: str, context_chunks: List[Dict[str, Any]]) -> str
     for idx, c in enumerate(context_chunks, start=1):
         meta = c.get("metadata", {})
         title = meta.get("document_title", "Course Document")
-        page = meta.get("page_number", "?")
+        raw_page = meta.get("page_number", "?")
+        try:
+            page = int(float(raw_page))
+        except (ValueError, TypeError):
+            page = raw_page
         text = meta.get("text", "")
         formatted_context.append(f"--- [Source {idx}: \"{title}\", Page {page}] ---\n{text}")
 
@@ -32,7 +41,7 @@ def build_rag_prompt(question: str, context_chunks: List[Dict[str, Any]]) -> str
 Student Question:
 {question}
 
-Answer with source citations [Document Title, Page X]:"""
+Answer with clean formatting and source citations [Document Title, Page X]:"""
 
 
 class RAGEngine:
@@ -58,12 +67,17 @@ class RAGEngine:
         seen = set()
         for c in retrieved_chunks:
             meta = c.get("metadata", {})
-            key = (meta.get("document_title"), meta.get("page_number"))
+            raw_page = meta.get("page_number", 1)
+            try:
+                page_num = int(float(raw_page))
+            except (ValueError, TypeError):
+                page_num = raw_page
+            key = (meta.get("document_title"), page_num)
             if key not in seen:
                 seen.add(key)
                 citations.append({
                     "document_title": meta.get("document_title"),
-                    "page_number": meta.get("page_number"),
+                    "page_number": page_num,
                     "score": round(float(c.get("score", 0.0)), 4),
                     "chunk_id": c.get("id"),
                 })
