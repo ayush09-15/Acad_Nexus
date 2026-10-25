@@ -2,8 +2,6 @@ const crypto = require("crypto");
 const mongoose = require("mongoose");
 const Class = require("../models/Class");
 
-
-
 const createClass = async (req, res) => {
   try {
     const { name, subject, description } = req.body;

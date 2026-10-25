@@ -243,7 +243,64 @@ h2 {
 .professor {
   color: #788398;
   font-size: 13px;
-  margin: 0 0 20px;
+  margin: 0 0 12px;
+}
+
+.class-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.class-subject-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #f0f4f8;
+  color: #486581;
+}
+
+.class-description {
+  color: #627d98;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0 0 14px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.class-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: #829ab1;
+}
+
+.class-search-bar {
+  margin-bottom: 18px;
+}
+
+.class-search-input {
+  width: 100%;
+  max-width: 360px;
+  padding: 10px 14px;
+  border: 1px solid #dce2eb;
+  border-radius: 9px;
+  font-size: 13px;
+  outline: none;
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.class-search-input:focus {
+  border-color: #117e83;
+  box-shadow: 0 0 0 3px #117e831a;
 }
 
 .primary-button {
@@ -331,6 +388,17 @@ h2 {
   background: #e2f4f2;
   color: #11686b !important;
   overflow-wrap: anywhere;
+}
+
+.form-message--error {
+  background: #fef2f2;
+  color: #991b1b !important;
+}
+
+.class-subject {
+  color: #68768a;
+  font-size: 12px;
+  margin: 0 0 12px;
 }
 
 .notes-panel h2 {
@@ -1692,4 +1760,17 @@ h2 {
 
 .logout-btn:hover {
   background: #333;
+}
+
+/* Accessibility helper */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
