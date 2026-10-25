@@ -117,6 +117,12 @@ describe("API Request Header Formation", () => {
     assert.strictEqual(config.method, "POST");
     assert.strictEqual(config.headers.Authorization, "Bearer student_token");
   });
+
+  it("properly formats admin requests with admin auth token", () => {
+    const config = buildRequestConfig("admin_token");
+    assert.strictEqual(config.headers.Authorization, "Bearer admin_token");
+    assert.strictEqual(config.headers["Content-Type"], "application/json");
+  });
 });
 
 describe("API Response Error Handling Contracts", () => {

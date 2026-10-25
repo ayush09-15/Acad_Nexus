@@ -131,6 +131,22 @@ export function deleteClass(classId) {
   });
 }
 
+// ── Admin API ─────────────────────────────────────────────────────────
+
+/**
+ * Fetch all registered professors (admin-only).
+ */
+export function fetchAdminProfessors() {
+  return apiRequest("/admin/professors");
+}
+
+/**
+ * Fetch all registered students (admin-only).
+ */
+export function fetchAdminStudents() {
+  return apiRequest("/admin/students");
+}
+
 // ── Auth helpers ──────────────────────────────────────────────────────
 
 /**

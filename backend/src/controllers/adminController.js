@@ -150,9 +150,39 @@ const approveProfessor = async (req, res) => {
   }
 };
 
+// Admin-only: fetch all student accounts.
+const getStudents = async (req, res) => {
+  try {
+    const students = await User.find({ role: "student" })
+      .select("_id name email role createdAt")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: students.length,
+      data: {
+        students: students.map((student) => ({
+          id: student._id.toString(),
+          name: student.name,
+          email: student.email,
+          role: student.role,
+          createdAt: student.createdAt,
+        })),
+      },
+    });
+  } catch (error) {
+    console.error("Fetch students failed:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch student accounts.",
+    });
+  }
+};
 
 module.exports = {
   createProfessor,
   approveProfessor,
   getProfessors,
+  getStudents,
 };

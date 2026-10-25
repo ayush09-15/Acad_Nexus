@@ -5,6 +5,7 @@ const {
   createProfessor,
   approveProfessor,
   getProfessors,
+  getStudents,
 } = require("../controllers/adminController");
 
 const {
@@ -28,12 +29,19 @@ router.patch(
   approveProfessor
 );
 
-
 router.get(
   "/professors",
   authenticateUser,
   authorizeRoles("admin"),
   getProfessors,
+);
+
+// Admin-only: list registered students
+router.get(
+  "/students",
+  authenticateUser,
+  authorizeRoles("admin"),
+  getStudents,
 );
 
 module.exports = router;
