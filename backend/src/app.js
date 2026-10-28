@@ -12,8 +12,13 @@ const connectDB = require("./config/db");
 
 const app = express();
 
+// Security Hardening: Disable Express fingerprinting header
+app.disable("x-powered-by");
+
 app.use(cors());
-app.use(express.json());
+// Body parser with 10mb limit to protect against oversized payload DoS
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use("/api/auth", authRoutes);
 app.use("/api/classes", classRoutes);
 app.use("/api/admin", adminRoutes);

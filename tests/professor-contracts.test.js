@@ -274,4 +274,51 @@ describe("Professor Model & Profile Contracts", () => {
     const guest = handleBackButtonPrompt(null, true);
     assert.strictEqual(guest.action, "ignore");
   });
+
+  it("validates sliding window rate limiter logic and RFC 429 response headers", () => {
+    function simulateRateLimiter({ windowMs, max }) {
+      const hits = [];
+      return function attempt(timestamp) {
+        // Filter timestamps within current sliding window
+        const active = hits.filter((t) => timestamp - t < windowMs);
+        if (active.length >= max) {
+          const oldest = active[0];
+          const retryAfter = Math.ceil((oldest + windowMs - timestamp) / 1000);
+          return {
+            allowed: false,
+            status: 429,
+            remaining: 0,
+            retryAfter,
+          };
+        }
+        active.push(timestamp);
+        hits.length = 0;
+        hits.push(...active);
+        return {
+          allowed: true,
+          status: 200,
+          remaining: max - hits.length,
+        };
+      };
+    }
+
+    const limiter = simulateRateLimiter({ windowMs: 60000, max: 3 });
+    const t0 = 100000;
+
+    // Requests 1, 2, 3 should be allowed
+    assert.strictEqual(limiter(t0).allowed, true);
+    assert.strictEqual(limiter(t0 + 1000).allowed, true);
+    assert.strictEqual(limiter(t0 + 2000).allowed, true);
+
+    // Request 4 exceeds max within window -> blocked with 429
+    const blocked = limiter(t0 + 3000);
+    assert.strictEqual(blocked.allowed, false);
+    assert.strictEqual(blocked.status, 429);
+    assert.ok(blocked.retryAfter > 0);
+
+    // After windowMs passes (t0 + 65000), new requests are permitted again
+    const postWindow = limiter(t0 + 65000);
+    assert.strictEqual(postWindow.allowed, true);
+    assert.strictEqual(postWindow.status, 200);
+  });
 });

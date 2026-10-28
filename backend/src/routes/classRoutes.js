@@ -26,6 +26,8 @@ const {
   authorizeRoles,
 } = require("../middleware/authMiddleware");
 
+const { aiQueryLimiter } = require("../middleware/rateLimitMiddleware");
+
 // Only approved, authenticated professors can create classes.
 router.post(
   "/",
@@ -107,10 +109,11 @@ router.get(
   getClassChatHistory
 );
 
-// Ask the document-grounded AI classroom assistant
+// Ask the document-grounded AI classroom assistant (rate-limited per user to protect quotas)
 router.post(
   "/:id/chat",
   authenticateUser,
+  aiQueryLimiter,
   chatWithClassAssistant
 );
 

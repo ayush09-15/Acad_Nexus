@@ -14,12 +14,14 @@ const {
 } = require("../middleware/authMiddleware");
 
 const upload = require("../middleware/uploadMiddleware");
+const { uploadLimiter } = require("../middleware/rateLimitMiddleware");
 
-// Upload PDF study material for a specific classroom (professor-only)
+// Upload PDF study material for a specific classroom (professor-only, rate-limited)
 router.post(
   "/classes/:classId/materials",
   authenticateUser,
   authorizeRoles("professor"),
+  uploadLimiter,
   upload.single("file"),
   uploadMaterial
 );
