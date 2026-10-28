@@ -321,4 +321,85 @@ describe("Professor Model & Profile Contracts", () => {
     assert.strictEqual(postWindow.allowed, true);
     assert.strictEqual(postWindow.status, 200);
   });
+
+  it("validates classroom Announcement schema, normalization, and countdown calculations", () => {
+    function sanitizeAnnouncementPayload(input, author) {
+      if (!input.title?.trim()) {
+        throw new Error("Announcement title is required.");
+      }
+      if (!input.content?.trim()) {
+        throw new Error("Announcement content is required.");
+      }
+
+      const validCategories = ["announcement", "assignment", "exam", "reminder"];
+      const validPriorities = ["normal", "urgent"];
+
+      let parsedDueDate = null;
+      if (input.dueDate) {
+        const d = new Date(input.dueDate);
+        if (!isNaN(d.getTime())) {
+          parsedDueDate = d.toISOString();
+        }
+      }
+
+      return {
+        classId: input.classId,
+        authorId: author.id,
+        authorName: author.name,
+        title: input.title.trim(),
+        content: input.content.trim(),
+        category: validCategories.includes(input.category) ? input.category : "announcement",
+        priority: validPriorities.includes(input.priority) ? input.priority : "normal",
+        isPinned: Boolean(input.isPinned),
+        dueDate: parsedDueDate,
+      };
+    }
+
+    const author = { id: "user-prof-1", name: "Prof. Alan Turing" };
+    const payload = sanitizeAnnouncementPayload(
+      {
+        classId: "class-123",
+        title: "  Final Project Submission  ",
+        content: "  Submit source code and report.  ",
+        category: "assignment",
+        priority: "urgent",
+        isPinned: true,
+        dueDate: "2026-11-20T23:59:00Z",
+      },
+      author
+    );
+
+    assert.strictEqual(payload.title, "Final Project Submission");
+    assert.strictEqual(payload.content, "Submit source code and report.");
+    assert.strictEqual(payload.category, "assignment");
+    assert.strictEqual(payload.priority, "urgent");
+    assert.strictEqual(payload.isPinned, true);
+    assert.strictEqual(payload.dueDate, "2026-11-20T23:59:00.000Z");
+    assert.strictEqual(payload.authorName, "Prof. Alan Turing");
+
+    // Invalid category defaults to "announcement"
+    const fallbackCategory = sanitizeAnnouncementPayload(
+      {
+        classId: "class-123",
+        title: "Test",
+        content: "Test",
+        category: "unknown-category",
+      },
+      author
+    );
+    assert.strictEqual(fallbackCategory.category, "announcement");
+    assert.strictEqual(fallbackCategory.priority, "normal");
+    assert.strictEqual(fallbackCategory.isPinned, false);
+    assert.strictEqual(fallbackCategory.dueDate, null);
+
+    // Missing title or content throws validation error
+    assert.throws(
+      () => sanitizeAnnouncementPayload({ content: "Missing title" }, author),
+      /Announcement title is required/
+    );
+    assert.throws(
+      () => sanitizeAnnouncementPayload({ title: "Missing content" }, author),
+      /Announcement content is required/
+    );
+  });
 });

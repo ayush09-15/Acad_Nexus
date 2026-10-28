@@ -336,6 +336,50 @@ export function fetchAdminStudents() {
   return apiRequest("/admin/students");
 }
 
+// ── Classroom Announcements & Deadlines API ───────────────────────────
+
+/**
+ * Fetch all announcements for a specific class.
+ */
+export function fetchClassAnnouncements(classId) {
+  return apiRequest(`/classes/${classId}/announcements`);
+}
+
+/**
+ * Fetch aggregate announcements feed across user's enrolled / teaching classes.
+ */
+export function fetchAnnouncementsFeed() {
+  return apiRequest("/announcements/feed");
+}
+
+/**
+ * Publish a new announcement or assignment deadline for a class (professor-only).
+ */
+export function createClassAnnouncement(classId, data) {
+  return apiRequest(`/classes/${classId}/announcements`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Delete an announcement from a class (professor-only).
+ */
+export function deleteClassAnnouncement(classId, announcementId) {
+  return apiRequest(`/classes/${classId}/announcements/${announcementId}`, {
+    method: "DELETE",
+  });
+}
+
+/**
+ * Toggle pin status for a classroom announcement (professor-only).
+ */
+export function togglePinAnnouncement(classId, announcementId) {
+  return apiRequest(`/classes/${classId}/announcements/${announcementId}/pin`, {
+    method: "PATCH",
+  });
+}
+
 // ── Auth helpers ──────────────────────────────────────────────────────
 
 /**

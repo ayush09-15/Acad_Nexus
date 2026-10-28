@@ -8,6 +8,8 @@ import {
   fetchSessionMessages,
   deleteChatSession,
   renameChatSession,
+  fetchAnnouncementsFeed,
+  fetchClassAnnouncements,
   getStoredUser,
   clearAuth,
 } from "../services/api";
@@ -20,6 +22,8 @@ import {
 } from "./ui/FeedbackComponents";
 import JoinClassSection from "./JoinClassSection";
 import ChatMessageContent from "./ChatMessageContent";
+import AnnouncementsFeed from "./announcements/AnnouncementsFeed";
+import "./announcements/Announcements.css";
 import "../components/ui/FeedbackComponents.css";
 
 // Temporary demo notes (unchanged from original).
@@ -75,7 +79,39 @@ export default function StudentDashboard() {
   const [activeSessionId, setActiveSessionId] = useState(null);
   const [sessionsLoading, setSessionsLoading] = useState(false);
 
-  // Load chat sessions from MongoDB whenever a class page is active
+  // Classroom Announcements & Deadlines State
+  const [feedAnnouncements, setFeedAnnouncements] = useState([]);
+  const [feedAnnouncementsLoading, setFeedAnnouncementsLoading] = useState(false);
+  const [classAnnouncements, setClassAnnouncements] = useState([]);
+  const [classAnnouncementsLoading, setClassAnnouncementsLoading] = useState(false);
+  const [classTab, setClassTab] = useState("chat"); // "chat" | "announcements"
+
+  const loadFeedAnnouncements = useCallback(async () => {
+    setFeedAnnouncementsLoading(true);
+    try {
+      const res = await fetchAnnouncementsFeed();
+      setFeedAnnouncements(res.data || []);
+    } catch (err) {
+      console.warn("Could not load announcements feed:", err.message);
+    } finally {
+      setFeedAnnouncementsLoading(false);
+    }
+  }, []);
+
+  const loadClassAnnouncements = useCallback(async (classId) => {
+    if (!classId) return;
+    setClassAnnouncementsLoading(true);
+    try {
+      const res = await fetchClassAnnouncements(classId);
+      setClassAnnouncements(res.data || []);
+    } catch (err) {
+      console.warn("Could not load class announcements:", err.message);
+    } finally {
+      setClassAnnouncementsLoading(false);
+    }
+  }, []);
+
+  // Load chat sessions & announcements whenever a class page is active
   useEffect(() => {
     const currentClass = classes.find((c) => c.name === activePage);
     const classId = currentClass?._id || currentClass?.id;
@@ -83,6 +119,9 @@ export default function StudentDashboard() {
 
     let ignore = false;
     setSessionsLoading(true);
+    setClassTab("chat");
+
+    loadClassAnnouncements(classId);
 
     fetchChatSessions(classId)
       .then((res) => {
@@ -232,10 +271,18 @@ export default function StudentDashboard() {
         }
       });
 
+    loadFeedAnnouncements();
+
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [loadFeedAnnouncements]);
+
+  useEffect(() => {
+    if (activePage === "Dashboard") {
+      loadFeedAnnouncements();
+    }
+  }, [activePage, loadFeedAnnouncements]);
 
   // Callback when a student successfully enrolls in a class.
   function handleClassJoined(newClass) {
@@ -245,6 +292,7 @@ export default function StudentDashboard() {
       return [newClass, ...previousClasses];
     });
     loadClasses();
+    loadFeedAnnouncements();
   }
 
   // Navigate to a page and clear any previous message.
@@ -604,6 +652,16 @@ export default function StudentDashboard() {
                       ))}
                     </div>
                   )}
+
+                  {/* Notices & Deadlines Feed across enrolled classes */}
+                  <div style={{ marginTop: "36px" }}>
+                    <AnnouncementsFeed
+                      announcements={feedAnnouncements}
+                      loading={feedAnnouncementsLoading}
+                      onRefresh={loadFeedAnnouncements}
+                      isProfessor={false}
+                    />
+                  </div>
                 </>
               )}
             </section>
@@ -814,10 +872,12 @@ export default function StudentDashboard() {
               <div className="chat-main-panel">
                 <div className="chat-heading">
                   <div>
-                    <p className="eyebrow">YOUR CLASSROOM ASSISTANT</p>
+                    <p className="eyebrow">YOUR CLASSROOM WORKSPACE</p>
                     <h2>{activePage}</h2>
                     <p>
-                      {activeSessionId && chatSessions.find((s) => s.id === activeSessionId)
+                      {classTab === "announcements"
+                        ? "Official announcements and homework/exam deadlines."
+                        : activeSessionId && chatSessions.find((s) => s.id === activeSessionId)
                         ? chatSessions.find((s) => s.id === activeSessionId).title
                         : "Ask questions about your class study materials."}
                     </p>
@@ -833,108 +893,172 @@ export default function StudentDashboard() {
                   </div>
                 </div>
 
-                {(chatMessages[activePage] || []).length === 0 && (
-                  <div className="chat-suggestions">
-                    <p>Try asking</p>
+                {/* Sub-navigation tabs: AI Chat vs Notices */}
+                <div className="classroom-tab-nav">
+                  <button
+                    type="button"
+                    className={`classroom-tab-btn ${classTab === "chat" ? "active" : ""}`}
+                    onClick={() => setClassTab("chat")}
+                  >
+                    <span>💬</span> AI Study Assistant
+                  </button>
+                  <button
+                    type="button"
+                    className={`classroom-tab-btn ${classTab === "announcements" ? "active" : ""}`}
+                    onClick={() => setClassTab("announcements")}
+                  >
+                    <span>📢</span> Notices & Deadlines
+                    {classAnnouncements.length > 0 && (
+                      <span className="classroom-tab-badge">
+                        {classAnnouncements.length}
+                      </span>
+                    )}
+                  </button>
+                </div>
 
-                    {[
-                      "Explain the important concepts",
-                      "Summarize my class notes",
-                      "Give me exam preparation questions",
-                    ].map((question) => (
-                      <button
-                        key={question}
-                        className="suggestion-button"
-                        onClick={() => setChatInput(question)}
-                      >
-                        {question} →
-                      </button>
-                    ))}
+                {/* Pinned Announcement Alert Banner */}
+                {classTab === "chat" && classAnnouncements.find((a) => a.isPinned) && (
+                  <div className="classroom-pinned-banner">
+                    <div className="classroom-pinned-content">
+                      <span className="classroom-pinned-icon">📌</span>
+                      <div className="classroom-pinned-text">
+                        <h4>{classAnnouncements.find((a) => a.isPinned).title}</h4>
+                        <p>
+                          {classAnnouncements.find((a) => a.isPinned).content.slice(0, 130)}
+                          {classAnnouncements.find((a) => a.isPinned).content.length > 130 ? "…" : ""}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="classroom-pinned-view-btn"
+                      onClick={() => setClassTab("announcements")}
+                    >
+                      View All ({classAnnouncements.length}) →
+                    </button>
                   </div>
                 )}
 
-                <div className="chat-conversation" aria-live="polite">
-                  {chatLoading && (chatMessages[activePage] || []).length === 0 ? (
-                    <div className="chat-empty-state">
-                      <LoadingSpinner />
-                      <p style={{ marginTop: "12px", color: "var(--muted-foreground, #6b7280)" }}>
-                        Loading conversation...
-                      </p>
-                    </div>
-                  ) : (chatMessages[activePage] || []).length === 0 ? (
-                    <div className="chat-empty-state">
-                      <div className="placeholder-icon">✦</div>
-                      <h3>What would you like to learn?</h3>
-                      <p>
-                        Ask a question to start this conversation with your class assistant.
-                      </p>
-                    </div>
-                  ) : (
-                    (chatMessages[activePage] || []).map((chatMessage) => (
-                      <div
-                        key={chatMessage.id}
-                        className={`chat-message ${
-                          chatMessage.role === "user"
-                            ? "user-message"
-                            : "assistant-message"
-                        }`}
-                      >
-                        <span className="chat-role">
-                          {chatMessage.role === "user" ? "You" : "Acad Nexus AI"}
-                        </span>
-                        {chatMessage.role === "user" ? (
-                          <p style={{ whiteSpace: "pre-wrap" }}>{chatMessage.text}</p>
-                        ) : (
-                          <ChatMessageContent text={chatMessage.text} />
-                        )}
+                {classTab === "announcements" ? (
+                  <div style={{ padding: "16px 0", flex: 1, overflowY: "auto" }}>
+                    <AnnouncementsFeed
+                      announcements={classAnnouncements}
+                      loading={classAnnouncementsLoading}
+                      onRefresh={() => {
+                        const currentClass = classes.find((c) => c.name === activePage);
+                        const classId = currentClass?._id || currentClass?.id;
+                        if (classId) loadClassAnnouncements(classId);
+                      }}
+                      isProfessor={false}
+                      currentClass={classes.find((c) => c.name === activePage)}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    {(chatMessages[activePage] || []).length === 0 && (
+                      <div className="chat-suggestions">
+                        <p>Try asking</p>
 
-                        {chatMessage.citations && chatMessage.citations.length > 0 && (
-                          <div className="chat-citations-bar">
-                            <span className="chat-citations-label">Sources:</span>
-                            <div className="chat-citations-list">
-                              {chatMessage.citations.map((cite, i) => (
-                                <span
-                                  key={i}
-                                  className="citation-pill"
-                                  title={`Retrieved from ${cite.document_title}`}
-                                >
-                                  📄 {cite.document_title} • Page {cite.page_number}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                        {[
+                          "Explain the important concepts",
+                          "Summarize my class notes",
+                          "Give me exam preparation questions",
+                        ].map((question) => (
+                          <button
+                            key={question}
+                            className="suggestion-button"
+                            onClick={() => setChatInput(question)}
+                          >
+                            {question} →
+                          </button>
+                        ))}
                       </div>
-                    ))
-                  )}
-                </div>
+                    )}
 
-                <form className="chat-input-form" onSubmit={sendChatMessage}>
-                  <input
-                    type="text"
-                    value={chatInput}
-                    onChange={(event) => setChatInput(event.target.value)}
-                    placeholder={
-                      isChatSubmitting
-                        ? "Classroom assistant is thinking..."
-                        : `Ask a question about ${activePage}...`
-                    }
-                    aria-label="Ask your class assistant"
-                    disabled={isChatSubmitting}
-                  />
+                    <div className="chat-conversation" aria-live="polite">
+                      {chatLoading && (chatMessages[activePage] || []).length === 0 ? (
+                        <div className="chat-empty-state">
+                          <LoadingSpinner />
+                          <p style={{ marginTop: "12px", color: "var(--muted-foreground, #6b7280)" }}>
+                            Loading conversation...
+                          </p>
+                        </div>
+                      ) : (chatMessages[activePage] || []).length === 0 ? (
+                        <div className="chat-empty-state">
+                          <div className="placeholder-icon">✦</div>
+                          <h3>What would you like to learn?</h3>
+                          <p>
+                            Ask a question to start this conversation with your class assistant.
+                          </p>
+                        </div>
+                      ) : (
+                        (chatMessages[activePage] || []).map((chatMessage) => (
+                          <div
+                            key={chatMessage.id}
+                            className={`chat-message ${
+                              chatMessage.role === "user"
+                                ? "user-message"
+                                : "assistant-message"
+                            }`}
+                          >
+                            <span className="chat-role">
+                              {chatMessage.role === "user" ? "You" : "Acad Nexus AI"}
+                            </span>
+                            {chatMessage.role === "user" ? (
+                              <p style={{ whiteSpace: "pre-wrap" }}>{chatMessage.text}</p>
+                            ) : (
+                              <ChatMessageContent text={chatMessage.text} />
+                            )}
 
-                  <button
-                    type="submit"
-                    className="primary-button"
-                    disabled={!chatInput.trim() || isChatSubmitting}
-                  >
-                    {isChatSubmitting ? "Thinking…" : "Send →"}
-                  </button>
-                </form>
+                            {chatMessage.citations && chatMessage.citations.length > 0 && (
+                              <div className="chat-citations-bar">
+                                <span className="chat-citations-label">Sources:</span>
+                                <div className="chat-citations-list">
+                                  {chatMessage.citations.map((cite, i) => (
+                                    <span
+                                      key={i}
+                                      className="citation-pill"
+                                      title={`Retrieved from ${cite.document_title}`}
+                                    >
+                                      📄 {cite.document_title} • Page {cite.page_number}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
 
-                <p className="chat-disclaimer">
-                  Grounded AI: Answers are derived from your course's uploaded study materials with verified source citations.
-                </p>
+                    <form className="chat-input-form" onSubmit={sendChatMessage}>
+                      <input
+                        type="text"
+                        value={chatInput}
+                        onChange={(event) => setChatInput(event.target.value)}
+                        placeholder={
+                          isChatSubmitting
+                            ? "Classroom assistant is thinking..."
+                            : `Ask a question about ${activePage}...`
+                        }
+                        aria-label="Ask your class assistant"
+                        disabled={isChatSubmitting}
+                      />
+
+                      <button
+                        type="submit"
+                        className="primary-button"
+                        disabled={!chatInput.trim() || isChatSubmitting}
+                      >
+                        {isChatSubmitting ? "Thinking…" : "Send →"}
+                      </button>
+                    </form>
+
+                    <p className="chat-disclaimer">
+                      Grounded AI: Answers are derived from your course's uploaded study materials with verified source citations.
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </section>

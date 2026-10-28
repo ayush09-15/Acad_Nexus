@@ -20,6 +20,7 @@ export default function ProfessorClassCard({
   onViewDetails,
   onOpenMaterials,
   onViewRoster,
+  onPostNotice,
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -121,6 +122,18 @@ export default function ProfessorClassCard({
                 title="View enrolled students roster"
               >
                 👥 Roster
+              </button>
+            )}
+
+            {onPostNotice && (
+              <button
+                type="button"
+                className="prof-materials-btn"
+                style={{ background: "#f0f9ff", color: "#0284c7", borderColor: "#bae6fd" }}
+                onClick={() => onPostNotice(classItem)}
+                title="Post notice or assignment deadline for this class"
+              >
+                📢 Notice
               </button>
             )}
           </div>

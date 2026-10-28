@@ -5,6 +5,7 @@ const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const materialRoutes = require("./routes/materialRoutes");
 const professorRoutes = require("./routes/professorRoutes");
+const announcementRoutes = require("./routes/announcementRoutes");
 const path = require("path");
 require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 
@@ -24,6 +25,7 @@ app.use("/api/classes", classRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/professors", professorRoutes);
 app.use("/api", materialRoutes);
+app.use("/api", announcementRoutes);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({

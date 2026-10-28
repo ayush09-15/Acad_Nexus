@@ -9,6 +9,9 @@ import {
   askClassAssistant,
   fetchProfessorProfile,
   updateProfessorProfile,
+  fetchAnnouncementsFeed,
+  deleteClassAnnouncement,
+  togglePinAnnouncement,
   getStoredUser,
   clearAuth,
 } from "../../services/api";
@@ -25,6 +28,8 @@ import EditClassModal from "./EditClassModal";
 import ClassDetailsModal from "./ClassDetailsModal";
 import ClassMaterialsModal from "./ClassMaterialsModal";
 import ClassRosterModal from "./ClassRosterModal";
+import AnnouncementsFeed from "../announcements/AnnouncementsFeed";
+import CreateAnnouncementModal from "../announcements/CreateAnnouncementModal";
 import ChatMessageContent from "../ChatMessageContent";
 import "./ProfessorWorkspace.css";
 import "../ui/FeedbackComponents.css";
@@ -79,6 +84,52 @@ export default function ProfessorWorkspace() {
   const [aiQuestion, setAiQuestion] = useState("");
   const [aiMessages, setAiMessages] = useState([]);
   const [aiLoading, setAiLoading] = useState(false);
+
+  // Classroom Announcements & Deadlines State
+  const [announcements, setAnnouncements] = useState([]);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(false);
+  const [isAnnouncementModalOpen, setIsAnnouncementModalOpen] = useState(false);
+  const [announcementInitialClassId, setAnnouncementInitialClassId] = useState("");
+
+  const loadAnnouncements = useCallback(async () => {
+    setAnnouncementsLoading(true);
+    try {
+      const res = await fetchAnnouncementsFeed();
+      setAnnouncements(res.data || []);
+    } catch (err) {
+      console.error("Error loading announcements:", err.message);
+    } finally {
+      setAnnouncementsLoading(false);
+    }
+  }, []);
+
+  const handleAnnouncementCreated = (newAnn) => {
+    setAnnouncements((prev) => [newAnn, ...prev]);
+    setSuccessNotice("Announcement published successfully!");
+  };
+
+  const handleDeleteAnnouncement = async (classId, announcementId) => {
+    if (!window.confirm("Are you sure you want to delete this announcement?")) return;
+    try {
+      await deleteClassAnnouncement(classId, announcementId);
+      setAnnouncements((prev) => prev.filter((a) => a._id !== announcementId));
+      setSuccessNotice("Announcement deleted successfully.");
+    } catch (err) {
+      setError(err.message || "Failed to delete announcement.");
+    }
+  };
+
+  const handleTogglePinAnnouncement = async (classId, announcementId) => {
+    try {
+      const res = await togglePinAnnouncement(classId, announcementId);
+      setAnnouncements((prev) =>
+        prev.map((a) => (a._id === announcementId ? res.data : a))
+      );
+      setSuccessNotice(res.message || "Announcement pin updated.");
+    } catch (err) {
+      setError(err.message || "Failed to update pin status.");
+    }
+  };
 
   // Load classes owned by the authenticated professor
   const loadClasses = useCallback(async () => {
@@ -142,10 +193,19 @@ export default function ProfessorWorkspace() {
         }
       });
 
+    loadAnnouncements();
+
     return () => {
       ignore = true;
     };
-  }, [userId, userName]);
+  }, [userId, userName, loadAnnouncements]);
+
+  // Reload announcements when navigating to the Announcements tab
+  useEffect(() => {
+    if (activeTab === "Announcements") {
+      loadAnnouncements();
+    }
+  }, [activeTab, loadAnnouncements]);
 
   // Load all materials when Materials tab is selected
   const loadAllMaterials = useCallback(async () => {
@@ -463,6 +523,14 @@ export default function ProfessorWorkspace() {
 
           <button
             type="button"
+            className={`prof-nav-item ${activeTab === "Announcements" ? "active" : ""}`}
+            onClick={() => setActiveTab("Announcements")}
+          >
+            <span>📢</span> Announcements ({announcements.length})
+          </button>
+
+          <button
+            type="button"
             className={`prof-nav-item ${activeTab === "AI Assistant" ? "active" : ""}`}
             onClick={() => setActiveTab("AI Assistant")}
           >
@@ -529,6 +597,7 @@ export default function ProfessorWorkspace() {
               {activeTab === "Classes" && "My Course Classrooms"}
               {activeTab === "Materials" && "All Course Study Materials"}
               {activeTab === "Students" && "Student Directory & Rosters"}
+              {activeTab === "Announcements" && "Class Announcements & Deadlines"}
               {activeTab === "AI Assistant" && "Interactive AI Teaching Assistant Preview"}
               {activeTab === "Profile" && "Academic & Faculty Profile"}
             </h1>
@@ -537,6 +606,7 @@ export default function ProfessorWorkspace() {
               {activeTab === "Classes" && "Create, edit, and organize classrooms and invitation codes."}
               {activeTab === "Materials" && "Manage PDF documents indexed for Document-Grounded RAG."}
               {activeTab === "Students" && "Inspect enrolled students across all your active courses."}
+              {activeTab === "Announcements" && "Publish notices, assignment deadlines, exam alerts, and pinned announcements to your students."}
               {activeTab === "AI Assistant" && "Test student queries and verified document citations before lecture."}
               {activeTab === "Profile" && "Manage your academic department, credentials, office hours, and faculty bio."}
             </p>
@@ -550,6 +620,17 @@ export default function ProfessorWorkspace() {
                 onClick={() => setIsEditingProfile((prev) => !prev)}
               >
                 {isEditingProfile ? "✕ Cancel Editing" : "✎ Edit Profile"}
+              </button>
+            ) : activeTab === "Announcements" ? (
+              <button
+                type="button"
+                className="prof-primary-btn"
+                onClick={() => {
+                  setAnnouncementInitialClassId("");
+                  setIsAnnouncementModalOpen(true);
+                }}
+              >
+                <span>＋</span> Post Notice
               </button>
             ) : (
               <button
@@ -599,6 +680,20 @@ export default function ProfessorWorkspace() {
                     RAG Ready
                   </p>
                   <span className="prof-stat-caption">Document citations enabled</span>
+                </article>
+
+                <article
+                  className="prof-stat-card"
+                  onClick={() => setActiveTab("Announcements")}
+                  style={{ cursor: "pointer" }}
+                  title="View Announcements & Deadlines"
+                >
+                  <div className="prof-stat-top">
+                    <span className="prof-stat-title">Class Notices</span>
+                    <span className="prof-stat-icon">📢</span>
+                  </div>
+                  <p className="prof-stat-value">{announcements.length}</p>
+                  <span className="prof-stat-caption">Posted updates & deadlines</span>
                 </article>
 
                 <article className="prof-stat-card">
@@ -652,6 +747,10 @@ export default function ProfessorWorkspace() {
                       onViewDetails={(c) => setDetailedClass(c)}
                       onOpenMaterials={(c) => setMaterialsClass(c)}
                       onViewRoster={(c) => setRosterClass(c)}
+                      onPostNotice={(c) => {
+                        setAnnouncementInitialClassId(c._id);
+                        setIsAnnouncementModalOpen(true);
+                      }}
                     />
                   ))}
                 </section>
@@ -686,6 +785,10 @@ export default function ProfessorWorkspace() {
                       onViewDetails={(c) => setDetailedClass(c)}
                       onOpenMaterials={(c) => setMaterialsClass(c)}
                       onViewRoster={(c) => setRosterClass(c)}
+                      onPostNotice={(c) => {
+                        setAnnouncementInitialClassId(c._id);
+                        setIsAnnouncementModalOpen(true);
+                      }}
                     />
                   ))}
                 </section>
@@ -1136,6 +1239,33 @@ export default function ProfessorWorkspace() {
             </div>
           )}
 
+          {/* TAB: CLASSROOM ANNOUNCEMENTS & DEADLINES */}
+          {activeTab === "Announcements" && (
+            <div
+              className="prof-card"
+              style={{
+                background: "#ffffff",
+                borderRadius: "12px",
+                border: "1px solid #e2e8f0",
+                padding: "24px",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+              }}
+            >
+              <AnnouncementsFeed
+                announcements={announcements}
+                loading={announcementsLoading}
+                onRefresh={loadAnnouncements}
+                isProfessor={true}
+                onDelete={handleDeleteAnnouncement}
+                onTogglePin={handleTogglePinAnnouncement}
+                onOpenCreateModal={() => {
+                  setAnnouncementInitialClassId("");
+                  setIsAnnouncementModalOpen(true);
+                }}
+              />
+            </div>
+          )}
+
           {/* TAB 5: ACADEMIC PROFILE */}
           {activeTab === "Profile" && (
             <div className="prof-profile-card">
@@ -1379,6 +1509,14 @@ export default function ProfessorWorkspace() {
         isOpen={Boolean(rosterClass)}
         classItem={rosterClass}
         onClose={() => setRosterClass(null)}
+      />
+
+      <CreateAnnouncementModal
+        isOpen={isAnnouncementModalOpen}
+        onClose={() => setIsAnnouncementModalOpen(false)}
+        onAnnouncementCreated={handleAnnouncementCreated}
+        classes={classes}
+        initialClassId={announcementInitialClassId}
       />
 
       <ConfirmDialog

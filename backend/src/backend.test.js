@@ -82,4 +82,34 @@ describe("Backend API Tests", () => {
     expect(response.statusCode).toBe(401);
     expect(response.body.success).toBe(false);
   });
+
+  test("GET /api/announcements/feed should reject an unauthenticated request", async () => {
+    const response = await request(app).get("/api/announcements/feed");
+
+    expect(response.statusCode).toBe(401);
+    expect(response.body.success).toBe(false);
+  });
+
+  test("GET /api/classes/123/announcements should reject an unauthenticated request", async () => {
+    const response = await request(app).get("/api/classes/123/announcements");
+
+    expect(response.statusCode).toBe(401);
+    expect(response.body.success).toBe(false);
+  });
+
+  test("POST /api/classes/123/announcements should reject an unauthenticated request", async () => {
+    const response = await request(app)
+      .post("/api/classes/123/announcements")
+      .send({ title: "Midterm Exam", content: "Details here" });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.body.success).toBe(false);
+  });
+
+  test("DELETE /api/classes/123/announcements/456 should reject an unauthenticated request", async () => {
+    const response = await request(app).delete("/api/classes/123/announcements/456");
+
+    expect(response.statusCode).toBe(401);
+    expect(response.body.success).toBe(false);
+  });
 });
