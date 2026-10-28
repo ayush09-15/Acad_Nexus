@@ -1,6 +1,8 @@
 const crypto = require("crypto");
 const mongoose = require("mongoose");
 const Class = require("../models/Class");
+const ChatMessage = require("../models/ChatMessage");
+const ChatSession = require("../models/ChatSession");
 
 const createClass = async (req, res) => {
   try {
@@ -365,6 +367,8 @@ const deleteClass = async (req, res) => {
     }
 
     await Class.deleteOne({ _id: classData._id });
+    await ChatMessage.deleteMany({ classId: classData._id });
+    await ChatSession.deleteMany({ classId: classData._id });
 
     return res.status(200).json({
       success: true,
@@ -423,7 +427,7 @@ const archiveClass = async (req, res) => {
 const chatWithClassAssistant = async (req, res) => {
   try {
     const { id } = req.params;
-    const { question } = req.body;
+    const { question, sessionId } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
@@ -462,6 +466,29 @@ const chatWithClassAssistant = async (req, res) => {
       });
     }
 
+    // Resolve or auto-create chat session
+    let currentSession = null;
+    if (sessionId && mongoose.Types.ObjectId.isValid(sessionId)) {
+      currentSession = await ChatSession.findOne({
+        _id: sessionId,
+        classId: id,
+        userId: req.user.id,
+      });
+    }
+
+    if (!currentSession) {
+      const trimmedQ = question.trim();
+      const generatedTitle =
+        trimmedQ.length > 40 ? trimmedQ.slice(0, 40) + "..." : trimmedQ;
+
+      currentSession = await ChatSession.create({
+        classId: id,
+        userId: req.user.id,
+        title: generatedTitle,
+        lastMessageAt: new Date(),
+      });
+    }
+
     const aiServiceUrl = process.env.AI_SERVICE_URL || "http://127.0.0.1:8000";
     const aiResponse = await fetch(`${aiServiceUrl}/api/ai/query`, {
       method: "POST",
@@ -479,13 +506,45 @@ const chatWithClassAssistant = async (req, res) => {
 
     const aiData = await aiResponse.json();
 
+    // Persist conversational turn to MongoDB linked to this session
+    let userMsgDoc = null;
+    let assistantMsgDoc = null;
+    try {
+      [userMsgDoc, assistantMsgDoc] = await Promise.all([
+        ChatMessage.create({
+          sessionId: currentSession._id,
+          classId: id,
+          userId: req.user.id,
+          role: "user",
+          text: question.trim(),
+        }),
+        ChatMessage.create({
+          sessionId: currentSession._id,
+          classId: id,
+          userId: req.user.id,
+          role: "assistant",
+          text: aiData.answer,
+          citations: aiData.citations || [],
+        }),
+      ]);
+
+      currentSession.lastMessageAt = new Date();
+      await currentSession.save();
+    } catch (dbErr) {
+      console.warn("Failed to persist chat message to MongoDB:", dbErr.message);
+    }
+
     return res.status(200).json({
       success: true,
       data: {
+        sessionId: currentSession._id,
+        sessionTitle: currentSession.title,
         question: question.trim(),
         answer: aiData.answer,
         citations: aiData.citations || [],
         sourcesCount: aiData.sources_count || 0,
+        userMessageId: userMsgDoc?._id,
+        assistantMessageId: assistantMsgDoc?._id,
       },
     });
   } catch (error) {
@@ -493,6 +552,395 @@ const chatWithClassAssistant = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "The AI teaching assistant is temporarily unavailable. Please verify the AI service is running.",
+    });
+  }
+};
+
+/**
+ * Fetch all chat sessions of a particular user in a class.
+ */
+const getChatSessions = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid class ID",
+      });
+    }
+
+    let filter;
+    if (req.user.role === "professor") {
+      filter = { _id: id, professorId: req.user.id };
+    } else if (req.user.role === "student") {
+      filter = { _id: id, students: req.user.id, isArchived: false };
+    } else {
+      return res.status(403).json({
+        success: false,
+        message: "You do not have permission to access this classroom chat.",
+      });
+    }
+
+    const classData = await Class.findOne(filter);
+    if (!classData) {
+      return res.status(404).json({
+        success: false,
+        message: "Class not found or access denied.",
+      });
+    }
+
+    const sessions = await ChatSession.find({
+      classId: id,
+      userId: req.user.id,
+    })
+      .sort({ lastMessageAt: -1, updatedAt: -1 })
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      count: sessions.length,
+      data: sessions.map((s) => ({
+        id: s._id.toString(),
+        title: s.title,
+        lastMessageAt: s.lastMessageAt || s.updatedAt,
+        createdAt: s.createdAt,
+      })),
+    });
+  } catch (error) {
+    console.error("Get chat sessions error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error fetching chat sessions.",
+    });
+  }
+};
+
+/**
+ * Create a new empty chat session for a student in a class.
+ */
+const createChatSession = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid class ID",
+      });
+    }
+
+    let filter;
+    if (req.user.role === "professor") {
+      filter = { _id: id, professorId: req.user.id };
+    } else if (req.user.role === "student") {
+      filter = { _id: id, students: req.user.id, isArchived: false };
+    } else {
+      return res.status(403).json({
+        success: false,
+        message: "You do not have permission to create chat sessions for this class.",
+      });
+    }
+
+    const classData = await Class.findOne(filter);
+    if (!classData) {
+      return res.status(404).json({
+        success: false,
+        message: "Class not found or access denied.",
+      });
+    }
+
+    const session = await ChatSession.create({
+      classId: id,
+      userId: req.user.id,
+      title: title?.trim() || "New Chat",
+      lastMessageAt: new Date(),
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Chat session created successfully.",
+      data: {
+        id: session._id.toString(),
+        title: session.title,
+        lastMessageAt: session.lastMessageAt,
+        createdAt: session.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error("Create chat session error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error creating chat session.",
+    });
+  }
+};
+
+/**
+ * Get all messages for a specific chat session.
+ */
+const getSessionMessages = async (req, res) => {
+  try {
+    const { id, sessionId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(sessionId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid class or session ID",
+      });
+    }
+
+    const session = await ChatSession.findOne({
+      _id: sessionId,
+      classId: id,
+      userId: req.user.id,
+    });
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat session not found.",
+      });
+    }
+
+    const messages = await ChatMessage.find({ sessionId })
+      .sort({ createdAt: 1 })
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      session: {
+        id: session._id.toString(),
+        title: session.title,
+        lastMessageAt: session.lastMessageAt,
+      },
+      count: messages.length,
+      data: messages.map((m) => ({
+        id: m._id.toString(),
+        role: m.role,
+        text: m.text,
+        citations: m.citations || [],
+        createdAt: m.createdAt,
+      })),
+    });
+  } catch (error) {
+    console.error("Get session messages error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error fetching session messages.",
+    });
+  }
+};
+
+/**
+ * Delete a specific chat session and all its messages.
+ */
+const deleteChatSession = async (req, res) => {
+  try {
+    const { id, sessionId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(sessionId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid class or session ID",
+      });
+    }
+
+    const session = await ChatSession.findOneAndDelete({
+      _id: sessionId,
+      classId: id,
+      userId: req.user.id,
+    });
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat session not found.",
+      });
+    }
+
+    await ChatMessage.deleteMany({ sessionId });
+
+    return res.status(200).json({
+      success: true,
+      message: "Chat session deleted successfully.",
+      data: { id: sessionId },
+    });
+  } catch (error) {
+    console.error("Delete chat session error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error deleting chat session.",
+    });
+  }
+};
+
+/**
+ * Rename a specific chat session.
+ */
+const renameChatSession = async (req, res) => {
+  try {
+    const { id, sessionId } = req.params;
+    const { title } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(sessionId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid class or session ID",
+      });
+    }
+
+    if (!title || !title.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Title is required",
+      });
+    }
+
+    const session = await ChatSession.findOneAndUpdate(
+      { _id: sessionId, classId: id, userId: req.user.id },
+      { title: title.trim().slice(0, 100) },
+      { new: true }
+    );
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat session not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Chat session renamed.",
+      data: {
+        id: session._id.toString(),
+        title: session.title,
+      },
+    });
+  } catch (error) {
+    console.error("Rename chat session error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error renaming chat session.",
+    });
+  }
+};
+
+/**
+ * Fetch chat history of a particular user in a class (backward compatible).
+ */
+const getClassChatHistory = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid class ID",
+      });
+    }
+
+    let filter;
+    if (req.user.role === "professor") {
+      filter = { _id: id, professorId: req.user.id };
+    } else if (req.user.role === "student") {
+      filter = { _id: id, students: req.user.id, isArchived: false };
+    } else {
+      return res.status(403).json({
+        success: false,
+        message: "You do not have permission to access this classroom chat.",
+      });
+    }
+
+    const classData = await Class.findOne(filter);
+    if (!classData) {
+      return res.status(404).json({
+        success: false,
+        message: "Class not found or access denied.",
+      });
+    }
+
+    const messages = await ChatMessage.find({
+      classId: id,
+      userId: req.user.id,
+    })
+      .sort({ createdAt: 1 })
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      count: messages.length,
+      data: messages.map((m) => ({
+        id: m._id.toString(),
+        role: m.role,
+        text: m.text,
+        citations: m.citations || [],
+        createdAt: m.createdAt,
+      })),
+    });
+  } catch (error) {
+    console.error("Get class chat history error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error fetching chat history.",
+    });
+  }
+};
+
+/**
+ * Clear chat history of a particular user in a class (backward compatible).
+ */
+const clearClassChatHistory = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid class ID",
+      });
+    }
+
+    let filter;
+    if (req.user.role === "professor") {
+      filter = { _id: id, professorId: req.user.id };
+    } else if (req.user.role === "student") {
+      filter = { _id: id, students: req.user.id, isArchived: false };
+    } else {
+      return res.status(403).json({
+        success: false,
+        message: "You do not have permission to clear this classroom chat.",
+      });
+    }
+
+    const classData = await Class.findOne(filter);
+    if (!classData) {
+      return res.status(404).json({
+        success: false,
+        message: "Class not found or access denied.",
+      });
+    }
+
+    await ChatMessage.deleteMany({
+      classId: id,
+      userId: req.user.id,
+    });
+    await ChatSession.deleteMany({
+      classId: id,
+      userId: req.user.id,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Chat history cleared successfully.",
+    });
+  } catch (error) {
+    console.error("Clear class chat history error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error clearing chat history.",
     });
   }
 };
@@ -507,6 +955,13 @@ module.exports = {
   deleteClass,
   archiveClass,
   chatWithClassAssistant,
+  getClassChatHistory,
+  clearClassChatHistory,
+  getChatSessions,
+  createChatSession,
+  getSessionMessages,
+  deleteChatSession,
+  renameChatSession,
 };
 
 

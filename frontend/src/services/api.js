@@ -180,11 +180,71 @@ export function getMaterialDownloadUrl(materialId) {
 
 /**
  * Ask the classroom RAG AI assistant a document-grounded question.
+ * Optionally provide a sessionId to continue an existing chat thread.
  */
-export function askClassAssistant(classId, question) {
+export function askClassAssistant(classId, question, sessionId = null) {
   return apiRequest(`/classes/${classId}/chat`, {
     method: "POST",
-    body: JSON.stringify({ question }),
+    body: JSON.stringify({ question, sessionId }),
+  });
+}
+
+/**
+ * Fetch all conversation sessions for a student in a class.
+ */
+export function fetchChatSessions(classId) {
+  return apiRequest(`/classes/${classId}/chat/sessions`);
+}
+
+/**
+ * Create a new chat session for a student in a class.
+ */
+export function createChatSession(classId, title = "New Chat") {
+  return apiRequest(`/classes/${classId}/chat/sessions`, {
+    method: "POST",
+    body: JSON.stringify({ title }),
+  });
+}
+
+/**
+ * Fetch all messages for a specific chat session.
+ */
+export function fetchSessionMessages(classId, sessionId) {
+  return apiRequest(`/classes/${classId}/chat/sessions/${sessionId}`);
+}
+
+/**
+ * Delete a specific chat session.
+ */
+export function deleteChatSession(classId, sessionId) {
+  return apiRequest(`/classes/${classId}/chat/sessions/${sessionId}`, {
+    method: "DELETE",
+  });
+}
+
+/**
+ * Rename a specific chat session.
+ */
+export function renameChatSession(classId, sessionId, title) {
+  return apiRequest(`/classes/${classId}/chat/sessions/${sessionId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ title }),
+  });
+}
+
+/**
+ * Fetch classroom chat history for the authenticated student/user.
+ */
+export function fetchClassChatHistory(classId) {
+  return apiRequest(`/classes/${classId}/chat`);
+}
+
+/**
+ * Clear classroom chat history for the authenticated student/user.
+ */
+export function clearClassChatHistory(classId) {
+  return apiRequest(`/classes/${classId}/chat`, {
+    method: "DELETE",
   });
 }
 

@@ -52,4 +52,34 @@ describe("Backend API Tests", () => {
     expect(response.statusCode).toBe(401);
     expect(response.body.success).toBe(false);
   });
+
+  test("GET /api/classes/123/chat should reject an unauthenticated request", async () => {
+    const response = await request(app).get("/api/classes/123/chat");
+
+    expect(response.statusCode).toBe(401);
+    expect(response.body.success).toBe(false);
+  });
+
+  test("GET /api/classes/123/chat/sessions should reject an unauthenticated request", async () => {
+    const response = await request(app).get("/api/classes/123/chat/sessions");
+
+    expect(response.statusCode).toBe(401);
+    expect(response.body.success).toBe(false);
+  });
+
+  test("POST /api/classes/123/chat/sessions should reject an unauthenticated request", async () => {
+    const response = await request(app)
+      .post("/api/classes/123/chat/sessions")
+      .send({ title: "New Conversation" });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.body.success).toBe(false);
+  });
+
+  test("DELETE /api/classes/123/chat should reject an unauthenticated request", async () => {
+    const response = await request(app).delete("/api/classes/123/chat");
+
+    expect(response.statusCode).toBe(401);
+    expect(response.body.success).toBe(false);
+  });
 });

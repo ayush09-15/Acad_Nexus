@@ -12,6 +12,13 @@ const {
   deleteClass,
   archiveClass,
   chatWithClassAssistant,
+  getClassChatHistory,
+  clearClassChatHistory,
+  getChatSessions,
+  createChatSession,
+  getSessionMessages,
+  deleteChatSession,
+  renameChatSession,
 } = require("../controllers/classController");
 
 const {
@@ -62,11 +69,56 @@ router.patch(
 
 router.get("/:id", authenticateUser, getClassById);
 
+// Chat Sessions (ChatGPT-style multi-thread conversations)
+router.get(
+  "/:id/chat/sessions",
+  authenticateUser,
+  getChatSessions
+);
+
+router.post(
+  "/:id/chat/sessions",
+  authenticateUser,
+  createChatSession
+);
+
+router.get(
+  "/:id/chat/sessions/:sessionId",
+  authenticateUser,
+  getSessionMessages
+);
+
+router.delete(
+  "/:id/chat/sessions/:sessionId",
+  authenticateUser,
+  deleteChatSession
+);
+
+router.patch(
+  "/:id/chat/sessions/:sessionId",
+  authenticateUser,
+  renameChatSession
+);
+
+// Fetch document-grounded AI classroom chat history (backward compatible)
+router.get(
+  "/:id/chat",
+  authenticateUser,
+  getClassChatHistory
+);
+
 // Ask the document-grounded AI classroom assistant
 router.post(
   "/:id/chat",
   authenticateUser,
   chatWithClassAssistant
+);
+
+// Clear document-grounded AI classroom chat history for this user
+router.delete(
+  "/:id/chat",
+  authenticateUser,
+  clearClassChatHistory
 );
 
 // Deletion will get an ownership check in the next step.

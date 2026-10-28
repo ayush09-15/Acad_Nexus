@@ -162,4 +162,54 @@ describe("Professor Model & Profile Contracts", () => {
       designation: "Lecturer",
     });
   });
+
+  it("validates student classroom chat message payload structure", () => {
+    function formatChatMessage({ _id, role, text, citations, createdAt }) {
+      assert.ok(["user", "assistant"].includes(role));
+      assert.strictEqual(typeof text, "string");
+      assert.ok(Array.isArray(citations));
+      return {
+        id: String(_id),
+        role,
+        text,
+        citations,
+        createdAt: createdAt || new Date(),
+      };
+    }
+
+    const userMessage = formatChatMessage({
+      _id: "64e0a1b2c3d4e5f6a7b8c9d1",
+      role: "user",
+      text: "Explain virtual memory paging",
+      citations: [],
+    });
+    assert.strictEqual(userMessage.role, "user");
+    assert.strictEqual(userMessage.text, "Explain virtual memory paging");
+
+    const assistantMessage = formatChatMessage({
+      _id: "64e0a1b2c3d4e5f6a7b8c9d2",
+      role: "assistant",
+      text: "Paging is a memory management scheme...",
+      citations: [{ document_title: "OS_Ch8.pdf", page_number: 12, score: 0.89 }],
+    });
+    assert.strictEqual(assistantMessage.role, "assistant");
+    assert.strictEqual(assistantMessage.citations.length, 1);
+    assert.strictEqual(assistantMessage.citations[0].document_title, "OS_Ch8.pdf");
+  });
+
+  it("validates ChatGPT-style ChatSession payload and title generation", () => {
+    function generateSessionTitle(prompt) {
+      const trimmed = prompt.trim();
+      return trimmed.length > 40 ? trimmed.slice(0, 40) + "..." : trimmed;
+    }
+
+    assert.strictEqual(
+      generateSessionTitle("What is deadlock?"),
+      "What is deadlock?"
+    );
+    assert.strictEqual(
+      generateSessionTitle("Can you explain how Dijkstra's algorithm finds the shortest path in a weighted graph?"),
+      "Can you explain how Dijkstra's algorithm..."
+    );
+  });
 });
