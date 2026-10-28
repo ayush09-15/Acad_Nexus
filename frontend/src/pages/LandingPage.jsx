@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import "../App.css";
 
 export default function LandingPage() {
+  const token = localStorage.getItem("acadNexusToken");
+
   return (
     <div className="landing-page">
       <header className="landing-nav">
@@ -13,12 +15,20 @@ export default function LandingPage() {
 
         <nav className="landing-nav-links">
           <a href="#features">Features</a>
-          <Link to="/login" className="landing-login">
-            Log in
-          </Link>
-          <Link to="/register" className="landing-signup">
-            Get Started
-          </Link>
+          {token ? (
+            <Link to="/dashboard" className="landing-signup">
+              Go to Dashboard →
+            </Link>
+          ) : (
+            <>
+              <Link to="/login" className="landing-login">
+                Log in
+              </Link>
+              <Link to="/register" className="landing-signup">
+                Get Started
+              </Link>
+            </>
+          )}
         </nav>
       </header>
 
@@ -42,13 +52,21 @@ export default function LandingPage() {
             </p>
 
             <div className="landing-hero-actions">
-              <Link to="/register" className="landing-primary-button">
-                Get Started <span>→</span>
-              </Link>
+              {token ? (
+                <Link to="/dashboard" className="landing-primary-button">
+                  Go to Dashboard <span>→</span>
+                </Link>
+              ) : (
+                <>
+                  <Link to="/register" className="landing-primary-button">
+                    Get Started <span>→</span>
+                  </Link>
 
-              <Link to="/login" className="landing-secondary-button">
-                Sign in to your account
-              </Link>
+                  <Link to="/login" className="landing-secondary-button">
+                    Sign in to your account
+                  </Link>
+                </>
+              )}
             </div>
 
             <div className="landing-trust-note">

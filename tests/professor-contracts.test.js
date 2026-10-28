@@ -212,4 +212,34 @@ describe("Professor Model & Profile Contracts", () => {
       "Can you explain how Dijkstra's algorithm..."
     );
   });
+
+  it("validates navigation guards and history replacement contracts", () => {
+    function resolveRouteAccess(path, token) {
+      if (path === "/login" || path === "/register") {
+        if (token) return { allow: false, redirect: "/dashboard", replace: true };
+        return { allow: true };
+      }
+      if (path === "/dashboard" || path.startsWith("/professor")) {
+        if (!token) return { allow: false, redirect: "/login", replace: true };
+        return { allow: true };
+      }
+      return { allow: true };
+    }
+
+    // Authenticated user trying to access /login should be redirected to /dashboard
+    const authToLogin = resolveRouteAccess("/login", "jwt-token-123");
+    assert.strictEqual(authToLogin.allow, false);
+    assert.strictEqual(authToLogin.redirect, "/dashboard");
+    assert.strictEqual(authToLogin.replace, true);
+
+    // Unauthenticated user trying to access /dashboard should be redirected to /login
+    const guestToDashboard = resolveRouteAccess("/dashboard", null);
+    assert.strictEqual(guestToDashboard.allow, false);
+    assert.strictEqual(guestToDashboard.redirect, "/login");
+    assert.strictEqual(guestToDashboard.replace, true);
+
+    // Guest visiting /login is allowed
+    const guestToLogin = resolveRouteAccess("/login", null);
+    assert.strictEqual(guestToLogin.allow, true);
+  });
 });

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { loginUser } from "../services/auth.api";
 
@@ -9,6 +9,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("acadNexusToken");
+    if (token) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [navigate]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -28,7 +35,7 @@ export default function LoginPage() {
       localStorage.setItem("acadNexusUser", JSON.stringify(user));
       window.dispatchEvent(new Event("acadNexusAuthChanged"));
 
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       setError(err.message || "Unable to log in.");
     } finally {
