@@ -55,31 +55,6 @@ export default function StudentDashboard() {
   };
 
   const [activePage, setActivePage] = useState("Dashboard");
-
-  // Handle browser back button: return to Dashboard from classes/tabs and never exit to login
-  useEffect(() => {
-    window.history.pushState({ page: "Dashboard" }, "", "/dashboard");
-
-    const handlePopState = () => {
-      setActivePage((currentPage) => {
-        if (currentPage !== "Dashboard") {
-          return "Dashboard";
-        }
-        window.history.pushState({ page: "Dashboard" }, "", "/dashboard");
-        return "Dashboard";
-      });
-    };
-
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
-
-  useEffect(() => {
-    if (activePage !== "Dashboard") {
-      window.history.pushState({ page: activePage }, "", "/dashboard");
-    }
-  }, [activePage]);
-
   const [classes, setClasses] = useState([]);
   const [classesLoading, setClassesLoading] = useState(true);
   const [classesError, setClassesError] = useState("");

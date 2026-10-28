@@ -11,6 +11,34 @@ import "./App.css";
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem("acadNexusToken");
 
+  useEffect(() => {
+    if (!token) return;
+
+    // Push initial history state so browser Back button fires a popstate event
+    window.history.pushState({ protectedDashboard: true }, "", window.location.href);
+
+    const handlePopState = () => {
+      const activeToken = localStorage.getItem("acadNexusToken");
+      if (!activeToken) return;
+
+      const confirmLogout = window.confirm("Are you sure you want to log out?");
+      if (confirmLogout) {
+        localStorage.removeItem("acadNexusToken");
+        localStorage.removeItem("acadNexusUser");
+        window.dispatchEvent(new Event("acadNexusAuthChanged"));
+        window.location.replace("/login");
+      } else {
+        // Re-push history entry so the user stays on dashboard and future Back presses are caught
+        window.history.pushState({ protectedDashboard: true }, "", window.location.href);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [token]);
+
   if (!token) {
     return <Navigate to="/login" replace />;
   }

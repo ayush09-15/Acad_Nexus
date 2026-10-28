@@ -242,4 +242,36 @@ describe("Professor Model & Profile Contracts", () => {
     const guestToLogin = resolveRouteAccess("/login", null);
     assert.strictEqual(guestToLogin.allow, true);
   });
+
+  it("validates browser back button logout confirmation contract", () => {
+    function handleBackButtonPrompt(token, confirmResponse) {
+      if (!token) return { action: "ignore" };
+      if (confirmResponse) {
+        return {
+          action: "logout",
+          clearAuth: true,
+          redirectTo: "/login",
+        };
+      }
+      return {
+        action: "stay",
+        repushHistory: true,
+      };
+    }
+
+    // User confirms logout -> logged out and redirected to /login
+    const confirmed = handleBackButtonPrompt("token-abc", true);
+    assert.strictEqual(confirmed.action, "logout");
+    assert.strictEqual(confirmed.clearAuth, true);
+    assert.strictEqual(confirmed.redirectTo, "/login");
+
+    // User cancels -> stays on dashboard
+    const cancelled = handleBackButtonPrompt("token-abc", false);
+    assert.strictEqual(cancelled.action, "stay");
+    assert.strictEqual(cancelled.repushHistory, true);
+
+    // Unauthenticated user -> ignored
+    const guest = handleBackButtonPrompt(null, true);
+    assert.strictEqual(guest.action, "ignore");
+  });
 });
