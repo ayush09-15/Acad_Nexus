@@ -38,10 +38,22 @@ export default function App() {
       setUser(JSON.parse(localStorage.getItem("acadNexusUser") || "null"));
     };
 
+    const checkAuthRouteRedirect = () => {
+      const token = localStorage.getItem("acadNexusToken");
+      const currentPath = window.location.pathname;
+      if (token && (currentPath === "/login" || currentPath === "/register")) {
+        window.location.replace("/dashboard");
+      }
+    };
+
     window.addEventListener("acadNexusAuthChanged", syncUser);
+    window.addEventListener("popstate", checkAuthRouteRedirect);
+    window.addEventListener("pageshow", checkAuthRouteRedirect);
 
     return () => {
       window.removeEventListener("acadNexusAuthChanged", syncUser);
+      window.removeEventListener("popstate", checkAuthRouteRedirect);
+      window.removeEventListener("pageshow", checkAuthRouteRedirect);
     };
   }, []);
 

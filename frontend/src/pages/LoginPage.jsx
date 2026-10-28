@@ -13,9 +13,9 @@ export default function LoginPage() {
   useEffect(() => {
     const token = localStorage.getItem("acadNexusToken");
     if (token) {
-      navigate("/dashboard", { replace: true });
+      window.location.replace("/dashboard");
     }
-  }, [navigate]);
+  }, []);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -35,7 +35,7 @@ export default function LoginPage() {
       localStorage.setItem("acadNexusUser", JSON.stringify(user));
       window.dispatchEvent(new Event("acadNexusAuthChanged"));
 
-      navigate("/dashboard", { replace: true });
+      window.location.replace("/dashboard");
     } catch (err) {
       setError(err.message || "Unable to log in.");
     } finally {

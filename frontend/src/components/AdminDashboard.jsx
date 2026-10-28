@@ -9,6 +9,31 @@ export default function AdminDashboard() {
     localStorage.getItem("acadNexusUser") || "null"
   );
   const [activeTab, setActiveTab] = useState("Dashboard");
+
+  // Handle browser back button: return to Dashboard from tabs and never exit to login
+  useEffect(() => {
+    window.history.pushState({ tab: "Dashboard" }, "", "/dashboard");
+
+    const handlePopState = () => {
+      setActiveTab((currentTab) => {
+        if (currentTab !== "Dashboard") {
+          return "Dashboard";
+        }
+        window.history.pushState({ tab: "Dashboard" }, "", "/dashboard");
+        return "Dashboard";
+      });
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab !== "Dashboard") {
+      window.history.pushState({ tab: activeTab }, "", "/dashboard");
+    }
+  }, [activeTab]);
+
   const [professors, setProfessors] = useState([]);
   const [students, setStudents] = useState([]);
   const [metricsLoading, setMetricsLoading] = useState(true);

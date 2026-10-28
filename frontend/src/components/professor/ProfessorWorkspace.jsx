@@ -36,6 +36,31 @@ export default function ProfessorWorkspace() {
 
   // Navigation tab: 'Dashboard' | 'Classes' | 'Materials' | 'Students' | 'AI Assistant' | 'Profile'
   const [activeTab, setActiveTab] = useState("Dashboard");
+
+  // Handle browser back button: return to Dashboard from tabs and never exit to login
+  useEffect(() => {
+    window.history.pushState({ tab: "Dashboard" }, "", window.location.pathname);
+
+    const handlePopState = () => {
+      setActiveTab((currentTab) => {
+        if (currentTab !== "Dashboard") {
+          return "Dashboard";
+        }
+        window.history.pushState({ tab: "Dashboard" }, "", window.location.pathname);
+        return "Dashboard";
+      });
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab !== "Dashboard") {
+      window.history.pushState({ tab: activeTab }, "", window.location.pathname);
+    }
+  }, [activeTab]);
+
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
