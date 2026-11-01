@@ -1,0 +1,172 @@
+/* ── Reusable feedback component styles ─────────────────────────────── */
+
+/* Loading spinner */
+.ui-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 40px 20px;
+  color: #68768a;
+  font-size: 14px;
+}
+
+.ui-spinner {
+  display: block;
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #117e83;
+  border-radius: 50%;
+  animation: ui-spin 0.7s linear infinite;
+}
+
+@keyframes ui-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error banner */
+.ui-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ui-error-icon {
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+.ui-error p {
+  flex: 1;
+  margin: 0;
+}
+
+.ui-error .text-button {
+  color: #991b1b;
+  font-weight: 700;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+/* Empty state */
+.ui-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 45px 20px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 13px;
+  text-align: center;
+  background: #fff;
+}
+
+.ui-empty .placeholder-icon {
+  margin: 0 auto 12px;
+}
+
+.ui-empty h3 {
+  margin: 8px 0;
+  font-size: 17px;
+  color: #182438;
+}
+
+.ui-empty p {
+  max-width: 400px;
+  margin: 0;
+  color: #7b879a;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Confirm dialog overlay */
+.ui-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: rgba(16, 28, 48, 0.45);
+  backdrop-filter: blur(3px);
+}
+
+.ui-dialog {
+  width: 100%;
+  max-width: 400px;
+  margin: 20px;
+  padding: 28px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(16, 28, 48, 0.2);
+}
+
+.ui-dialog h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: #182438;
+}
+
+.ui-dialog p {
+  margin: 0 0 24px;
+  color: #68768a;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.ui-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.ui-cancel-button {
+  padding: 10px 16px;
+  border: 1px solid #dce2eb;
+  border-radius: 9px;
+  background: #fff;
+  color: #3e4a5e;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.ui-cancel-button:hover {
+  background: #f5f7fb;
+}
+
+.ui-danger-button {
+  padding: 10px 16px;
+  border: 1px solid #dc2626;
+  border-radius: 9px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.ui-danger-button:hover {
+  background: #b91c1c;
+}
+
+/* Success message */
+.ui-success {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #d9f4e6;
+  color: #166534;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}

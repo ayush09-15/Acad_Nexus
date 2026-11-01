@@ -47,14 +47,29 @@ Acad_Nexus/
 
 ## Getting Started
 
-The project is currently under development. Setup instructions will be added as the frontend, backend, and AI service are implemented.
-
 ### Prerequisites
 
-- Node.js and npm
+- Node.js (v18+) and npm
 - Python
 - MongoDB access
 - Pinecone account and API credentials
+
+### Running the Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### Running Tests
+
+```bash
+cd frontend
+npm test
+```
+
+For detailed frontend workflow and integration notes, see [Frontend Documentation](docs/FRONTEND_WORKFLOWS.md).
 
 ## Security
 
